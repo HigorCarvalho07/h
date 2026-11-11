@@ -1,0 +1,1445 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema I.Z.Z.E.T. - Iron Man</title>
+  
+  <!-- Importa o Tailwind CSS sem precisar de instalação -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <style>
+    /* Oculta a barra de rolagem do fundo quando o modal abre */
+    .no-scroll { overflow: hidden; }
+    
+    /* Configurações para a animação 3D de Virar a Carta */
+    .flip-container { perspective: 1000px; }
+    .flip-inner {
+      position: relative;
+      width: 100%;
+      transition: transform 0.7s;
+      transform-style: preserve-3d;
+    }
+    .flip-inner.is-flipped { transform: rotateY(180deg); }
+    .flip-front, .flip-back {
+      width: 100%;
+      backface-visibility: hidden;
+      border-radius: 1rem;
+    }
+    .flip-back {
+      position: absolute;
+      top: 0;
+      left: 0;
+      transform: rotateY(180deg);
+    }
+    
+    /* Estilização da barra de rolagem */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #020617; }
+    ::-webkit-scrollbar-thumb { background: #0891b2; border-radius: 4px; }
+  </style>
+</head>
+<body class="bg-slate-950 p-6 font-sans text-slate-200 min-h-screen">
+
+  <!-- HEADER -->
+  <header class="mb-10 text-center">
+    <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-red-500 uppercase drop-shadow-[0_0_10px_rgba(34,211,238,0.4)]">
+      Sistema I.Z.Z.E.T.
+    </h1>
+    <p class="mt-2 text-slate-400 italic">Arquivos Táticos: Iron Man Artifacts</p>
+  </header>
+
+  <!-- GRID ONDE AS CARTAS VÃO APARECER -->
+  <div id="cards-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 max-w-7xl mx-auto">
+    <!-- Gerado via JavaScript -->
+  </div>
+
+  <!-- MODAL (Com rolagem na tela inteira) -->
+  <div id="modal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-950/95 backdrop-blur-md">
+    
+    <!-- Botão Fechar -->
+    <button onclick="closeModal()" class="fixed top-4 right-4 z-50 p-2 bg-slate-800 hover:bg-red-600 rounded-full transition-colors text-white shadow-lg border border-slate-700">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+
+    <div class="min-h-screen p-4 md:p-8 flex justify-center pb-20">
+      <div class="w-full max-w-5xl mt-8">
+        
+        <div class="flex flex-col lg:flex-row gap-8">
+          <!-- Lado Esquerdo (Imagem e Botão) -->
+          <div class="w-full lg:w-2/5 flex flex-col items-center shrink-0">
+            <div class="flip-container relative w-full max-w-sm">
+              <div id="modal-flip-inner" class="flip-inner">
+                <img id="modal-img-front" src="" alt="" class="flip-front shadow-[0_0_30px_rgba(34,211,238,0.3)]">
+                <img id="modal-img-back" src="" alt="" class="flip-back shadow-[0_0_30px_rgba(239,68,68,0.3)] hidden">
+              </div>
+            </div>
+            <!-- Botão Virar (Injetado via JS se a carta for dupla) -->
+            <div id="flip-button-container" class="w-full mt-6 flex justify-center hidden">
+              <button onclick="toggleFlip()" id="flip-btn-text" class="flex items-center justify-center w-full max-w-xs gap-2 py-3 px-6 rounded-lg bg-gradient-to-r from-cyan-600 to-cyan-800 hover:from-cyan-500 hover:to-cyan-700 text-white font-bold uppercase tracking-wide transition-all shadow-[0_0_15px_rgba(34,211,238,0.5)] border border-cyan-400/50">
+                Virar Carta
+              </button>
+            </div>
+          </div>
+
+          <!-- Lado Direito (Textos) -->
+          <div class="w-full lg:w-3/5 text-slate-300">
+            <h2 id="modal-title" class="text-3xl font-bold text-white mb-2">Nome da Carta</h2>
+            <p id="modal-type" class="text-cyan-400 font-semibold mb-6 border-b border-slate-700 pb-4">Tipo da Carta</p>
+
+            <div class="space-y-6">
+              <div>
+                <h3 class="text-sm font-bold uppercase text-slate-500 mb-2">Tradução do Texto Original</h3>
+                <div id="modal-translation" class="bg-slate-900/80 p-4 rounded-lg border-l-4 border-cyan-500 italic whitespace-pre-line text-slate-300"></div>
+              </div>
+              <div>
+                <h3 class="text-sm font-bold uppercase text-slate-500 mb-2">Explicação das Habilidades</h3>
+                <p id="modal-explanation" class="leading-relaxed bg-slate-900/50 p-4 rounded-lg border border-slate-800"></p>
+              </div>
+              <div>
+                <h3 class="text-sm font-bold uppercase text-red-500 mb-2 flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  Exemplo Prático
+                </h3>
+                <p id="modal-example" class="leading-relaxed bg-red-950/20 p-4 rounded-lg border border-red-900/50 text-slate-200"></p>
+              </div>
+              <div>
+                <h3 class="text-sm font-bold uppercase text-amber-500 mb-2 flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  Observações Importantes
+                </h3>
+                <p id="modal-notes" class="leading-relaxed text-sm bg-amber-950/20 p-4 rounded-lg border border-amber-900/50 text-amber-200/90"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    // BANCO DE DADOS (COLE SUAS NOVAS CARTAS AQUI)
+    // ==========================================
+    const cardsDatabase = [
+      {
+        id: "arcane-signet",
+        name: "Arcane Signet",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Arcane+Signet&format=image",
+        typeFront: "Artefato",
+        translationFront: "{T}: Adicione um mana de qualquer cor da identidade de cor do seu comandante.",
+        explanationFront: "A pedra de mana mais eficiente do formato. Como o Iron Man é Izzet, ela sempre gerará mana azul ou vermelha, entrando desvirada e acelerando o seu jogo imediatamente no turno 2.",
+        exampleFront: "No turno 2, você conjura o Arcane Signet. Ele entra desvirado, permitindo que você já o vire para gerar mana e conjurar um 'Wayfarer's Bauble' ou proteger sua mesa com um anula de custo 1.",
+        notesFront: "Não possui identidade de cor própria (é incolor), mas sua habilidade está intrinsecamente ligada às cores do seu Comandante na zona de comando.",
+        isDoubleFaced: false
+      },
+      {
+        id: "blightsteel-colossus",
+        name: "Blightsteel Colossus",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Blightsteel+Colossus&format=image",
+        typeFront: "Criatura Artefato — Golem",
+        translationFront: "Atropelar, infectar, indestrutível. (Esta criatura causa dano a criaturas na forma de marcadores -1/-1 e a jogadores na forma de marcadores de veneno.)\nSe Colosso de Aço Infeccionado for colocado num cemitério vindo de qualquer lugar, revele-o e, em vez disso, embaralhe-o em seu dono grimório.",
+        explanationFront: "A principal condição de vitória de 'Hit Kill' do baralho. Com Infectar, ele só precisa causar 10 de dano no jogador para eliminá-lo instantaneamente do jogo, ignorando os pontos de vida. Sendo Indestrutível, é um pesadelo de ser removido.",
+        exampleFront: "Você o coloca em campo de graça com a habilidade do Invincible Iron Man. No combate, ele ataca um oponente. Mesmo que o oponente bloqueie com uma criatura 1/1, o Atropelar faz com que 10 de dano passem direto como marcadores de veneno, matando o jogador na hora.",
+        notesFront: "A habilidade de embaralhar no grimório é um efeito de substituição ('em vez disso'). Ele nunca chega a tocar o cemitério, o que impede que oponentes o reanimem, mas também impede que você use o Goblin Welder nele.",
+        isDoubleFaced: false
+      },
+      {
+        id: "cyberdrive-awakener",
+        name: "Cyberdrive Awakener",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Cyberdrive+Awakener&format=image",
+        typeFront: "Criatura Artefato — Construto",
+        translationFront: "Voar.\nQuando Cyberdrive Awakener entrar no campo de batalha, até o final do turno, cada artefato que não seja criatura que você controla se torna uma criatura artefato com poder e resistência básicos 4/4 e ganha voar.",
+        explanationFront: "Um finalizador explosivo. Ele transforma todas as suas pedras de mana passivas, equipamentos e, principalmente, suas fichas de Tesouro em um exército de criaturas 4/4 voadoras do nada.",
+        exampleFront: "Você tem 8 fichas de Tesouro na mesa. Você conjura o Awakener. Imediatamente, seus Tesouros viram oito criaturas 4/4 com voar. Você ataca com 32 de dano aéreo letal no mesmo turno (se os tesouros já estavam na mesa desde o turno anterior e não têm enjoo de invocação).",
+        notesFront: "Se os artefatos se tornarem criaturas no mesmo turno em que entraram em campo, eles sofrerão de enjoo de invocação e não poderão atacar, a menos que tenham ímpeto (como através do Lightning Greaves).",
+        isDoubleFaced: false
+      },
+      {
+        id: "cyclonic-rift",
+        name: "Cyclonic Rift",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Cyclonic+Rift&format=image",
+        typeFront: "Mágica Instantânea",
+        translationFront: "Devolva a permanente alvo que você não controla que não seja um terreno para a mão de seu dono.\nSobrecarga {6}{U} (Você pode conjurar esta mágica pagando seu custo de sobrecarga. Se fizer isso, mude o texto substituindo 'a permanente alvo' por 'cada permanente'.)",
+        explanationFront: "A limpeza de mesa mais poderosa do formato Commander. Por ser instantânea e assimétrica (só afeta os oponentes), ela abre caminho para ataques letais ou salva você de perder o jogo, desfazendo horas do progresso inimigo.",
+        exampleFront: "No final do turno do oponente à sua direita (antes do seu turno começar), você paga 7 manas e conjura pelo custo de Sobrecarga. Todas as criaturas, artefatos, encantamentos e planeswalkers de todos os oponentes voltam para as mãos deles. No seu turno, a mesa estará vazia para os ataques do Iron Man.",
+        notesFront: "Sobrecarga não dá alvo. Permanentes com Manto (Shroud), Resistência à Magia (Hexproof) ou Proteção contra o Azul serão devolvidas para a mão ignorando suas proteções.",
+        isDoubleFaced: false
+      },
+      {
+        id: "daretti-scrap-savant",
+        name: "Daretti, Scrap Savant",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Daretti,+Scrap+Savant&format=image",
+        typeFront: "Planeswalker Lendário — Daretti",
+        translationFront: "+2: Descarte até dois cards. Depois, compre aquele mesmo número de cards.\n-2: Sacrifique um artefato. Se fizer isso, devolva o card de artefato alvo do seu cemitério para o campo de batalha.\n-10: Você recebe um emblema com 'Toda vez que um artefato for colocado no seu cemitério vindo do campo de batalha, devolva aquele card para o campo de batalha no início da próxima etapa final.'\nDaretti, Sabido da Sucata, pode ser seu comandante.",
+        explanationFront: "O motor do deck. O -2 é a chave, trocando um artefato inútil na mesa por uma bomba no cemitério. O +2 permite reciclar a mão.",
+        exampleFront: "Você ativa o +2 para descartar o 'Blightsteel Colossus' que estava travado na mão. Depois, ativa o -2, sacrifica um Tesouro e traz o Colosso direto do cemitério, economizando 12 manas.",
+        notesFront: "Você pode ativar o +2 e escolher descartar zero cartas, apenas para aumentar a lealdade dele para o próximo turno.",
+        isDoubleFaced: false
+      },
+      {
+        id: "darksteel-citadel",
+        name: "Darksteel Citadel",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Darksteel+Citadel&format=image",
+        typeFront: "Terreno Artefato",
+        translationFront: "Indestrutível\n{T}: Adicione {C}.",
+        explanationFront: "Terreno que conta como artefato, ativando sinergias e reduzindo custos com Afinidade instantaneamente, sobrevivendo a remoções de mesa.",
+        exampleFront: "Se alguém conjurar 'Vandalblast' com Sobrecarga, sua Cidadela permanecerá intacta por ser Indestrutível, garantindo sua mana.",
+        notesFront: "Você ainda pode sacrificá-la voluntariamente como custo para o Iron Man, pois 'sacrificar' ignora a regra de indestrutível.",
+        isDoubleFaced: false
+      },
+      {
+        id: "desynchronization",
+        name: "Desynchronization",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Desynchronization&format=image",
+        typeFront: "Mágica Instantânea",
+        translationFront: "Afinidade por artefatos (Esta mágica custa {1} a menos para ser conjurada para cada artefato que você controla.)\nDevolva todas as permanentes que não sejam artefatos para as mãos de seus donos.",
+        explanationFront: "Funciona como um 'Cyclonic Rift' gigante. Limpa criaturas, encantamentos e planeswalkers, deixando todos os seus artefatos intocados na mesa.",
+        exampleFront: "Com 6 artefatos na mesa, a Afinidade reduz o custo em 6. A mágica custará apenas 1 mana azul, devolvendo os bloqueadores inimigos para a mão.",
+        notesFront: "A Afinidade só reduz a mana genérica (incolor). A mana azul sempre terá que ser paga.",
+        isDoubleFaced: false
+      },
+      {
+        id: "emry-lurker",
+        name: "Emry, Lurker of the Loch",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Emry,+Lurker+of+the+Loch&format=image",
+        typeFront: "Criatura Lendária — Tritão Mago",
+        translationFront: "Esta mágica custa {1} a menos para ser conjurada para cada artefato que você controla.\nQuando entrar, triture quatro cards.\n{T}: Escolha o card de artefato alvo no seu cemitério. Você pode conjurar aquele card neste turno.",
+        explanationFront: "Motor de recursão que se enche o próprio cemitério (com o Triture). Virá-la permite jogar artefatos destruídos como se estivessem na mão.",
+        exampleFront: "Você vira a Emry e conjura a 'Wayfarer's Bauble' do cemitério para acelerar terrenos. No próximo turno, repete o processo.",
+        notesFront: "Você ainda precisa pagar o custo de mana do artefato no cemitério, ela apenas te dá permissão para jogá-lo.",
+        isDoubleFaced: false
+      },
+      {
+        id: "etherium-sculptor",
+        name: "Etherium Sculptor",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Etherium+Sculptor&format=image",
+        typeFront: "Criatura Artefato — Vedalkeano Artífice",
+        translationFront: "As mágicas de artefato que você conjura custam {1} a menos para serem conjuradas.",
+        explanationFront: "Redutor estático de custos que acelera todo o seu jogo. Combos explosivos começam quando suas cartas ficam mais baratas.",
+        exampleFront: "Com ele em jogo, o 'Sensei's Divining Top' custa 0 manas. Se jogar 3 artefatos num turno, você economizou 3 manas na prática.",
+        notesFront: "Múltiplos redutores de custo se acumulam na mesa.",
+        isDoubleFaced: false
+      },
+      {
+        id: "fabricate",
+        name: "Fabricate",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Fabricate&format=image",
+        typeFront: "Feitiço",
+        translationFront: "Procure em seu grimório um card de artefato, revele-o e coloque-o na sua mão. Depois, embaralhe seu grimório.",
+        explanationFront: "Tutor clássico. Busca exatamente a peça de combo ou a ferramenta que você precisa direto para a mão.",
+        exampleFront: "Você tem mana mas a mão está vazia. Conjura Fabricate, busca 'The One Ring' e o joga na sequência para reabastecer a mão.",
+        notesFront: "O texto manda 'revelar' para provar aos oponentes que você buscou legalmente um artefato e não outra coisa.",
+        isDoubleFaced: false
+      },
+      {
+        id: "fierce-guardianship",
+        name: "Fierce Guardianship",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Fierce+Guardianship&format=image",
+        typeFront: "Mágica Instantânea",
+        translationFront: "Se você controlar um comandante, você poderá conjurar esta mágica sem pagar seu custo de mana.\nAnule a mágica alvo que não seja de criatura.",
+        explanationFront: "Feitiço de proteção 'Free Spell'. Garante que o Iron Man não seja morto por mágicas inimigas mesmo quando todos os seus terrenos estiverem virados.",
+        exampleFront: "Oponente lança 'Vandalblast' para destruir seus artefatos. Você joga Fierce Guardianship de graça da mão e anula a ameaça.",
+        notesFront: "A restrição 'que não seja criatura' significa que ela não anula invocações de bichos dos oponentes.",
+        isDoubleFaced: false
+      },
+      {
+        id: "goblin-welder",
+        name: "Goblin Welder",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Goblin+Welder&format=image",
+        typeFront: "Criatura — Goblin Artífice",
+        translationFront: "{T}: Escolha o card de artefato alvo em um cemitério e o artefato alvo no campo de batalha. O controlador da permanente a sacrifica e devolve o card de artefato de seu cemitério para o campo de batalha.",
+        explanationFront: "A engrenagem de combos. Realiza uma 'troca' forçada: destrói um artefato na mesa para ressuscitar outro do cemitério.",
+        exampleFront: "Seu 'Portal to Phyrexia' (custo 9) está no cemitério. Você vira o Welder, sacrifica um Tesouro (custo 0) na mesa. A ficha morre, e o Portal entra em jogo.",
+        notesFront: "Você pode dar alvo em artefatos de oponentes para forçá-los a trocar uma bomba da mesa por um lixo do cemitério.",
+        isDoubleFaced: false
+      },
+      {
+        id: "iron-man-titan",
+        name: "Iron Man, Titan of Innovation",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Iron+Man,+Titan+of+Innovation&format=image",
+        typeFront: "Criatura Artefato Lendária — Humano Herói",
+        translationFront: "Voar, ímpeto.\nToda vez que Iron Man atacar, crie uma ficha de Tesouro. Depois, você pode sacrificar um artefato que não seja ficha. Se fizer isso, procure em seu grimório um card de artefato com valor de mana igual a 1 mais o valor de mana daquele artefato, coloque-o no campo de batalha virado...",
+        explanationFront: "O Comandante. Garante rampa de mana com Tesouros e atua como um 'Pod', transformando artefatos baratos da mesa em peças caras do deck.",
+        exampleFront: "Ele ataca. Você cria o Tesouro e sacrifica a 'Mind Stone' (custo 2). A habilidade busca o 'Ensnaring Bridge' (custo 3) e põe na mesa.",
+        notesFront: "A habilidade exige sacrificar um artefato que NÃO seja ficha. O alvo buscado precisa custar EXATAMENTE 1 mana a mais que o sacrificado.",
+        isDoubleFaced: false
+      },
+      {
+        id: "jhoira-weatherlight",
+        name: "Jhoira, Weatherlight Captain",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Jhoira,+Weatherlight+Captain&format=image",
+        typeFront: "Criatura Lendária — Humano Artífice",
+        translationFront: "Toda vez que você conjurar uma mágica histórica, compre um card. (Artefatos, Lendas e Sagas são históricos.)",
+        explanationFront: "Motor de compras absurdo. Como tudo no seu deck é histórico, cada mágica virada na mesa rende uma nova carta na mão.",
+        exampleFront: "Você conjura 'Sol Ring'. Compra uma carta. Usa a mana para conjurar 'Arcane Signet'. Compra outra carta.",
+        notesFront: "O gatilho ocorre na *conjuração*. Se o oponente anular sua mágica, você ainda compra a carta.",
+        isDoubleFaced: false
+      },
+      {
+        id: "lightning-greaves",
+        name: "Lightning Greaves",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Lightning+Greaves&format=image",
+        typeFront: "Artefato — Equipamento",
+        translationFront: "A criatura equipada tem ímpeto e manto. (Não pode ser alvo de mágicas ou habilidades.)\nEquipar {0}",
+        explanationFront: "A bota suprema. Custa ZERO para equipar e concede imunidade a alvos (Manto) para as suas cartas vitais instantaneamente.",
+        exampleFront: "Você desce o Iron Man e equipa a bota de graça. Nenhum oponente poderá alvejá-lo com feitiços de remoção.",
+        notesFront: "Manto impede que ATÉ VOCÊ dê alvos. Para equipar outra coisa nele, você terá que mover as botas antes.",
+        isDoubleFaced: false
+      },
+      {
+        id: "mox-opal",
+        name: "Mox Opal",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Mox+Opal&format=image",
+        typeFront: "Artefato Lendário",
+        translationFront: "Maestria com metais — {T}: Adicione um mana de qualquer cor. Ative somente se você controlar três ou mais artefatos.",
+        explanationFront: "Aceleração gratuita. Pedra que custa 0 e funciona como terreno extra indestrutível se tiver 3 artefatos na mesa.",
+        exampleFront: "Turno 1: 'Darksteel Citadel', 'Sol Ring', e 'Mox Opal'. A Maestria liga, e você gera mana sem usar terrenos coloridos.",
+        notesFront: "É lendária, não pode ser clonada sem que a regra das lendas a destrua.",
+        isDoubleFaced: false
+      },
+      {
+        id: "myr-retriever",
+        name: "Myr Retriever",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Myr+Retriever&format=image",
+        typeFront: "Criatura Artefato — Myr",
+        translationFront: "Quando Myr Recuperador for colocado num cemitério vindo do campo de batalha, devolva outro card de artefato alvo de seu cemitério para sua mão.",
+        explanationFront: "Peça de looping. Ele existe para ser sacrificado pelo Comandante e resgatar suas melhores cartas do cemitério.",
+        exampleFront: "Sacrifica ele pro Iron Man. A habilidade de morte dele resgata a 'Mox Opal' de volta pra sua mão.",
+        notesFront: "Ele especifica 'outro' artefato. Não pode dar alvo a si mesmo.",
+        isDoubleFaced: false
+      },
+      {
+        id: "the-one-ring",
+        name: "The One Ring",
+        imageFront: "https://api.scryfall.com/cards/named?exact=The+One+Ring&format=image",
+        typeFront: "Artefato Lendário",
+        translationFront: "Indestrutível.\nQuando entrar, se você o conjurou, você ganha proteção contra tudo até o próximo turno.\nManutenção: perde 1 de vida por marcador.\n{T}: Coloque um marcador de fardo, compre um card para cada marcador.",
+        explanationFront: "Garante um turno de invencibilidade (Fog) e lota a sua mão de cartas nos turnos seguintes em troca de um pouco de vida.",
+        exampleFront: "Você conjura. Fica imune a ataques no turno inimigo. No seu turno, vira ele e compra 1 carta, no próximo compra 2, escalonando o recurso.",
+        notesFront: "A proteção é para VOCÊ. Só funciona se o Anel for CONJURADO. Se for reanimado do cemitério, não te dá proteção.",
+        isDoubleFaced: false
+      },
+      {
+        id: "padeem-consul",
+        name: "Padeem, Consul of Innovation",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Padeem,+Consul+of+Innovation&format=image",
+        typeFront: "Criatura Lendária — Vedalkeano Artífice",
+        translationFront: "Os artefatos que você controla têm resistência à magia.\nNa manutenção, se você controlar o artefato com o maior valor de mana, compre um card.",
+        explanationFront: "O guarda-costas dos seus artefatos, bloqueando totalmente interações inimigas neles, e te premia com compras por ter bombas caras na mesa.",
+        exampleFront: "Com ele e o Portal to Phyrexia (custo 9) na mesa, oponentes não podem alvejar o Portal. Na manutenção, você compra carta extra pelo Portal.",
+        notesFront: "Resistência à Magia (Hexproof) ainda permite que VOCÊ continue dando alvos nos seus próprios artefatos livremente.",
+        isDoubleFaced: false
+      },
+      {
+        id: "portal-to-phyrexia",
+        name: "Portal to Phyrexia",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Portal+to+Phyrexia&format=image",
+        typeFront: "Artefato",
+        translationFront: "Quando entrar, cada oponente sacrifica três criaturas.\nNa sua manutenção, coloque o card de criatura alvo de um cemitério no campo de batalha sob o seu controle.",
+        explanationFront: "Bomba de controle massiva. Limpa criaturas indestrutíveis forçando o sacrifício, e reanima os bichos inimigos mortos a seu favor.",
+        exampleFront: "Você conjura. Oponentes perdem 3 criaturas cada. Na sua manutenção, você pega o comandante inimigo morto pro seu campo.",
+        notesFront: "A regra do sacrifício ignora proteções de Manto e Indestrutível dos oponentes.",
+        isDoubleFaced: false
+      },
+      {
+        id: "rhystic-study",
+        name: "Rhystic Study",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Rhystic+Study&format=image",
+        typeFront: "Encantamento",
+        translationFront: "Toda vez que um oponente conjurar uma mágica, você pode comprar um card, a menos que aquele jogador pague {1}.",
+        explanationFront: "A maior 'taxa' do formato Commander. Atua punindo os oponentes por tentarem desenvolver o jogo deles. Ou eles gastam mais mana do que deveriam, atrasando seus planos, ou não pagam a taxa e enchem a sua mão de repostas.",
+        exampleFront: "O oponente tenta fazer dois feitiços rápidos no turno dele, mas só tem 1 mana sobrando. Ele paga a taxa do primeiro e deixa de pagar a do segundo. Você imediatamente compra uma carta antes do feitiço dele resolver.",
+        notesFront: "Você deve perguntar 'Vai pagar 1?' toda vez que uma mágica inimiga entrar na pilha. O gatilho de compra acontece antes da mágica do oponente surtir efeito na mesa.",
+        isDoubleFaced: false
+      },
+      {
+        id: "simulacrum-synthesizer",
+        name: "Simulacrum Synthesizer",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Simulacrum+Synthesizer&format=image",
+        typeFront: "Artefato",
+        translationFront: "Vidência 2 (Scry 2).\nToda vez que outro artefato com valor de mana 3 ou maior entrar no campo de batalha sob o seu controle, crie uma ficha de criatura artefato Construto incolor 0/0 com 'Esta criatura recebe +1/+1 para cada artefato que você controla.'",
+        explanationFront: "Um gerador de exército passivo. Em um deck Izzet de artefatos, você fará artefatos de custo 3+ o tempo todo. Essa carta transforma suas pedras de mana e utilitários em monstros gigantescos sem gastar recursos extras.",
+        exampleFront: "O Iron Man ataca e busca a 'Ensnaring Bridge' (custo 3) do deck. Ao entrar no campo, ela engatilha o Sintetizador, que cria um Construto. Como você tem 12 artefatos na mesa, você ganha de brinde uma criatura 12/12.",
+        notesFront: "O efeito desencadeia se o artefato ENTRAR em campo. Não precisa ser conjurado da mão. Artefatos reanimados pelo Welder ou buscados pelo Iron Man ativam a habilidade normalmente.",
+        isDoubleFaced: false
+      },
+      {
+        id: "sol-ring",
+        name: "Sol Ring",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Sol+Ring&format=image",
+        typeFront: "Artefato",
+        translationFront: "{T}: Adicione {C}{C}.",
+        explanationFront: "Aceleração pura, direta e inquestionável. A carta mais jogada do formato porque custa apenas 1 mana genérica e te devolve 2, quebrando a matemática básica de curva de mana do jogo.",
+        exampleFront: "Turno 1: Montanha e Sol Ring (sobram 2 manas). Você já usa essas 2 manas para descer um 'Arcane Signet'. No Turno 2 você já terá 5 manas disponíveis.",
+        notesFront: "Gera mana incolor ({C}). Essa mana não pode ser usada para pagar custos específicos azuis ou vermelhos, servindo apenas para os custos genéricos das suas mágicas.",
+        isDoubleFaced: false
+      },
+      {
+        id: "training-center",
+        name: "Training Center",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Training+Center&format=image",
+        typeFront: "Terreno",
+        translationFront: "Centro de Treinamento entra no campo de batalha virado, a menos que você tenha dois ou mais oponentes.\n{T}: Adicione {U} ou {R}.",
+        explanationFront: "Um dos chamados 'Crowd Lands' (Terrenos de Multidão). No Commander, um formato multiplayer (geralmente 4 jogadores), este terreno funciona como uma 'Dual Land' perfeita, entrando desvirado 99% das vezes.",
+        exampleFront: "No turno 1, você tem 3 oponentes sentados à mesa. Você desce o Training Center. Ele entra desvirado e pronto para gerar mana colorida imediata.",
+        notesFront: "Se você estiver no 1 contra 1 no final da partida (x1) e comprar esta carta, ela infelizmente entrará virada.",
+        isDoubleFaced: false
+      },
+      {
+        id: "ugins-nexus",
+        name: "Ugin's Nexus",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Ugin's+Nexus&format=image",
+        typeFront: "Artefato Lendário",
+        translationFront: "Se um jogador fosse começar um turno extra, em vez disso, ele pula aquele turno.\nSe Nexo de Ugin for colocado num cemitério vindo do campo de batalha, em vez de colocá-lo no cemitério de seu dono, exile-o e você joga um turno extra após este.",
+        explanationFront: "Passivamente, trava os combos de turnos infinitos dos oponentes. Ativamente, se você conseguir sacrificá-lo, é você quem ganha o turno extra para atacar duas vezes com sua mesa.",
+        exampleFront: "Você sacrifica o Ugin's Nexus com a habilidade do Iron Man. Ele vai para o exílio, te dá um turno extra, e você ainda busca um artefato de custo 6 de graça do deck.",
+        notesFront: "O texto passivo afeta VOCÊ também. Enquanto ele estiver vivo na mesa, você não pode ganhar turnos extras. Ele PRECISA ser destruído e ir pro exílio para liberar a habilidade.",
+        isDoubleFaced: false
+      },
+      {
+        id: "unwinding-clock",
+        name: "Unwinding Clock",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Unwinding+Clock&format=image",
+        typeFront: "Artefato",
+        translationFront: "Desvire todos os artefatos que você controla durante a etapa de desvirar de cada outro jogador.",
+        explanationFront: "Motor supremo para quem joga no turno adversário. Transforma suas pedras de mana em recursos inesgotáveis durante os turnos de absolutamente todo mundo na mesa.",
+        exampleFront: "Você gasta 5 manas das suas pedras de artefato no seu turno e passa. No turno do Jogador 2, suas pedras desviram e você tem 5 manas para jogar uma mágica instantânea. No turno do Jogador 3, elas desviram de novo.",
+        notesFront: "Desvira APENAS artefatos. Terrenos convencionais permanecem virados. Porém, 'Darksteel Citadel', sendo Terreno Artefato, será desvirada.",
+        isDoubleFaced: false
+      },
+      {
+        id: "urza-lord-high",
+        name: "Urza, Lord High Artificer",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Urza,+Lord+High+Artificer&format=image",
+        typeFront: "Criatura Lendária — Humano Artífice",
+        translationFront: "Quando entrar, crie uma ficha de Construto 0/0 que recebe +1/+1 para cada artefato seu.\nVire um artefato desvirado que você controla: Adicione {U}.\n{5}: Embaralhe o seu grimório, exile o card do topo. Você pode jogá-lo de graça.",
+        explanationFront: "Uma máquina de valor absurda. Ele cria uma criatura imensa, transforma qualquer lixo na sua mesa (como Fichas de Tesouro e Equipamentos) em geradores de mana azul e tem um 'cassino' embutido para conjurar o topo do deck.",
+        exampleFront: "Em vez de sacrificar 10 tesouros e perdê-los para gerar mana, você usa a habilidade do Urza e vira os tesouros intactos para gerar 10 manas azuis. Você usa 5 dessas manas para ativar a habilidade dele e jogar o 'Blightsteel Colossus' de graça do topo do deck.",
+        notesFront: "A habilidade de virar artefatos não tem o símbolo de {T}. Isso significa que burla o 'enjoo de invocação'. Você pode virar o Construto que acabou de ser criado para gerar mana no mesmo turno.",
+        isDoubleFaced: false
+      },
+      {
+        id: "vandalblast",
+        name: "Vandalblast",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Vandalblast&format=image",
+        typeFront: "Feitiço",
+        translationFront: "Destrua o artefato alvo que você não controla.\nSobrecarga {4}{R} (Você pode conjurar esta mágica pagando seu custo de sobrecarga. Se fizer isso, mude o texto substituindo 'o artefato alvo' por 'cada artefato'.)",
+        explanationFront: "Pode ser um simples quebra-pedra no turno 1, mas com a Sobrecarga (Overload) transforma-se na remoção assimétrica definitiva, dizimando a base de artefatos de todos os oponentes sem encostar na sua.",
+        exampleFront: "Você paga 5 manas. A carta passa a ler 'Destrua cada artefato que você não controla'. Os anéis, botas e tesouros de todos os oponentes viram pó.",
+        notesFront: "A Sobrecarga não dá alvo (a palavra some da carta). Logo, artefatos inimigos com Manto (Shroud) ou Resistência à Magia (Hexproof) também são destruídos.",
+        isDoubleFaced: false
+      },
+      {
+        id: "vedalken-archmage",
+        name: "Vedalken Archmage",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Vedalken+Archmage&format=image",
+        typeFront: "Criatura — Vedalkeano Mago",
+        translationFront: "Toda vez que você conjurar uma mágica de artefato, compre um card.",
+        explanationFront: "Uma Jhoira redundante para proteger sua estratégia. Ele transforma cada artefato que sai da sua mão em uma reposição imediata, garantindo que o deck nunca perca o fôlego.",
+        exampleFront: "Você tem redutores de custo e baixa um 'Sensei's Divining Top' de graça. Compra uma carta. Joga um equipamento de custo 0 e compra outra carta. O Archmage alimenta combos explosivos.",
+        notesFront: "O gatilho é na conjuração (cast). Mesmo se o oponente lançar um 'Counterspell' anulando o seu artefato, a compra da carta ainda acontece.",
+        isDoubleFaced: false
+      },
+      {
+        id: "wayfarers-bauble",
+        name: "Wayfarer's Bauble",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Wayfarer's+Bauble&format=image",
+        typeFront: "Artefato",
+        translationFront: "{2}, {T}, Sacrifique Wayfarer's Bauble: Procure em seu grimório um card de terreno básico, coloque aquele card no campo de batalha virado e depois embaralhe o seu grimório.",
+        explanationFront: "Aceleração ('ramp') de terrenos muito rara no Azul e Vermelho. É a escolha perfeita para ficar reciclando do cemitério com a Emry ou Daretti.",
+        exampleFront: "Você conjura a Bauble no turno 1. Turno 2 sacrifica e busca uma Ilha. Turno 3 conjura a Emry, vira ela e joga a Bauble do cemitério, garantindo terreno extra todo turno.",
+        notesFront: "O sacrifício é parte do custo (antes dos dois pontos). Ninguém pode tentar destruí-la em resposta para te impedir de buscar o terreno.",
+        isDoubleFaced: false
+      },
+      {
+        id: "whir-of-invention",
+        name: "Whir of Invention",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Whir+of+Invention&format=image",
+        typeFront: "Mágica Instantânea",
+        translationFront: "Improvisar (Cada artefato que você virar depois de terminar de ativar habilidades de mana paga {1}.)\nProcure em seu grimório um card de artefato com valor de mana X ou menos, coloque-o no campo de batalha e depois embaralhe.",
+        explanationFront: "Tutor instantâneo que joga a peça direto na mesa. O 'Improvisar' te permite usar artefatos inúteis ou esgotados para ajudar a pagar o custo X gigantesco.",
+        exampleFront: "Fim do turno inimigo. Você vira 3 Ilhas para pagar {U}{U}{U}. Vira 9 Fichas de Tesouro para pagar o Improvisar (sem sacrificá-las). O X virou 9. Você busca o 'Portal to Phyrexia' e joga de surpresa.",
+        notesFront: "O Improvisar não gera mana colorida. Os três custos Azuis têm que ser pagos com terrenos ou pedras de mana convencionais.",
+        isDoubleFaced: false
+      },
+      {
+        id: "tony-stark",
+        id: "tony-stark",
+        name: "Tony Stark // The Invincible Iron Man",
+        imageFront: "imagens_flipCards/TonyStark_front.webp",
+        imageBack: "imagens_flipCards/TonyStark_back.webp",
+        typeFront: "Criatura Lendária — Humano Artífice Herói",
+        typeBack: "Criatura Artefato Lendária — Humano Herói",
+        translationFront: "{1}, {T}: Olhe os 4 cards do topo... Você pode revelar um artefato e colocá-lo na mão.\n{4}{U}{R}: Transforme Tony Stark. Como feitiço.",
+        translationBack: "Voar, ímpeto.\nNo início do combate, coloque um artefato da mão no campo de batalha. Se for Equipamento, anexe a ele.",
+        explanationFront: "Um filtro de cartas de início de jogo. Ele cava fundo no baralho garantindo que você tenha as suas peças de combo na mão. Quando sua mesa estiver estruturada, você o transforma.",
+        explanationBack: "Ao virar armadura, ele joga suas maiores cartas da mão direto pra mesa de graça antes de atacar, e veste equipamentos caros sem pagar custo de equipar.",
+        exampleFront: "Filtra com o Tony Stark por 4 turnos e acha o 'Cyberdrive Awakener'. Transforma ele. Vai para o combate, e a habilidade joga o Awakener de graça na mesa animando todos os seus tesouros.",
+        notesFront: "Por ser a mesma permanente, se o Tony Stark não tem enjoo de invocação, ao transformá-lo para Iron Man ele já pode atacar imediatamente.",
+        isDoubleFaced: true
+      },
+      {
+        id: "mycosynth-wellspring",
+        name: "Mycosynth Wellspring",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Mycosynth+Wellspring&format=image",
+        typeFront: "Artefato",
+        translationFront: "Quando Mycosynth Wellspring entrar no campo de batalha ou for colocado num cemitério vindo do campo de batalha, você pode procurar em seu grimório um card de terreno básico, revelá-lo e colocá-lo na sua mão. Depois, embaralhe.",
+        explanationFront: "Artefato de rampa e valor duplo. Te dá um terreno na mão ao entrar e outro ao morrer, sendo um alvo perfeito para ser sacrificado pelas engrenagens do seu deck.",
+        exampleFront: "Você conjura, pega uma Ilha. No turno seguinte, sacrifica ele com o Goblin Welder ou com seu Comandante, pega uma Montanha e ainda reanima/busca um artefato melhor.",
+        notesFront: "O terreno vai para a mão, não para o campo de batalha. Mesmo assim, garante que você nunca perca a descida de terreno (land drop) do seu turno.",
+        isDoubleFaced: false
+      },
+      {
+        id: "sink-into-stupor",
+        name: "Sink into Stupor // Soporific Springs",
+        imageFront: "imagens_flipCards/SinkIntoStupor_front.webp",
+        imageBack: "imagens_flipCards/SinkIntoStupor_back.webp",
+        typeFront: "Mágica Instantânea",
+        typeBack: "Terreno",
+        translationFront: "Devolva a mágica alvo ou a permanente alvo que não seja um terreno para a mão de seu dono.",
+        translationBack: "Soporific Springs entra no campo de batalha virado, a menos que você pague 3 pontos de vida.\n{T}: Adicione {U}.",
+        explanationFront: "Interação flexível. Serve tanto como um 'anula' temporário (devolvendo a mágica inimiga da pilha para a mão) ou como remoção de permanente ameaçadora que já está na mesa.",
+        explanationBack: "Se você precisar de mana para não perder o ritmo de jogo nos turnos iniciais, você pode ignorar completamente o feitiço e jogar essa carta como terreno.",
+        exampleFront: "Oponente conjura uma mágica para ganhar o jogo. Você conjura Sink into Stupor dando alvo na mágica dele na pilha. Ela volta para a mão dele e não resolve.",
+        exampleBack: "No turno 1, você precisa conjurar um 'Sol Ring' mas não tem terreno azul. Você desce Soporific Springs pagando 3 de vida, ela entra desvirada e você tem sua mana.",
+        notesFront: "Como é um MDFC (Modal Double-Faced Card), em qualquer lugar que não seja o campo de batalha (na sua mão, baralho ou cemitério), esta carta é considerada APENAS uma Mágica Instantânea.",
+        notesBack: "Se você não pagar os 3 pontos de vida, ela entrará virada e não poderá gerar mana naquele mesmo turno.",
+        isDoubleFaced: true
+      },
+      {
+        id: "archmage-emeritus",
+        name: "Archmage Emeritus",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Archmage+Emeritus&format=image",
+        typeFront: "Criatura — Humano Mago",
+        translationFront: "Magifício — Toda vez que você conjura ou copia uma mágica instantânea ou feitiço, compre um card.",
+        explanationFront: "Um motor de compras extremamente eficiente. Embora seu deck seja focado em artefatos, você possui muitas instantâneas e tutores. Ele transforma tudo isso em reposição de mão.",
+        exampleFront: "Você conjura 'Ponder'. O Magifício desencadeia na mesma hora, você compra uma carta pelo Archmage, e depois resolve o Ponder, comprando mais uma e arrumando o topo.",
+        notesFront: "O gatilho funciona também ao COPIAR mágicas. Se uma habilidade ou carta fizer uma cópia do seu feitiço na pilha, você compra outra carta.",
+        isDoubleFaced: false
+      },
+      {
+        id: "ponder",
+        name: "Ponder",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Ponder&format=image",
+        typeFront: "Feitiço",
+        translationFront: "Olhe os três cards do topo do seu grimório e depois coloque-os de volta em qualquer ordem. Você pode embaralhar seu grimório.\nCompre um card.",
+        explanationFront: "A cantrip (mágica de custo 1 que repõe carta) mais amada do jogo. Permite arrumar os seus próximos 3 turnos ou jogar tudo fora e tentar a sorte comprando uma carta nova.",
+        exampleFront: "Você olha o topo e vê 3 terrenos, mas precisava de uma anulação para sobreviver. Você escolhe embaralhar o deck e depois compra uma carta aleatória, se livrando da má sorte garantida.",
+        notesFront: "A decisão de embaralhar é opcional, mas você deve fazê-lo ANTES de comprar a carta. Se você não embaralhar, obrigatoriamente comprará a carta que deixou no topo.",
+        isDoubleFaced: false
+      },
+      {
+        id: "cloud-key",
+        name: "Cloud Key",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Cloud+Key&format=image",
+        typeFront: "Artefato",
+        translationFront: "Conforme Cloud Key entra no campo de batalha, escolha artefato, criatura, encantamento, instantânea ou feitiço.\nAs mágicas do tipo escolhido que você conjura custam {1} a menos para serem conjuradas.",
+        explanationFront: "Redutor de custo versátil. No seu deck, 95% das vezes você nomeará 'Artefato', fazendo com que ela funcione como um 'Etherium Sculptor' extra.",
+        exampleFront: "Com Cloud Key (nomeando Artefato) e Etherium Sculptor na mesa, seus artefatos custarão 2 manas a menos. Um 'Thran Dynamo' passará a custar apenas 2 manas para descer.",
+        notesFront: "A escolha é feita *conforme* (as it enters) ela entra. Isso não usa a pilha, ou seja, os oponentes não podem responder destruindo a chave depois que você falar qual o tipo escolhido.",
+        isDoubleFaced: false
+      },
+      {
+        id: "mechanized-production",
+        name: "Mechanized Production",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Mechanized+Production&format=image",
+        typeFront: "Encantamento — Aura",
+        translationFront: "Encantar artefato que você controla.\nNo início de sua manutenção, crie uma ficha que seja uma cópia do artefato encantado. Depois, se você controlar oito ou mais artefatos com o mesmo nome que o outro, você vence o jogo.",
+        explanationFront: "Uma condição de vitória alternativa absurda e motor de valor. Encantar um artefato útil já te gera vantagem constante. Vencer o jogo com as fichas de Tesouro é um bônus de ouro.",
+        exampleFront: "Você encanta uma ficha de Tesouro. Passa a ganhar 1 Tesouro extra todo turno. Se você chegar a 8 Tesouros na sua manutenção (criados por qualquer fonte), você vence a partida imediatamente.",
+        notesFront: "Os 8 artefatos não precisam ser cópias exatas criadas por este encantamento. Se você simplesmente tiver 8 fichas de Tesouro normais na mesa quando o gatilho resolver, a carta já te dá a vitória.",
+        isDoubleFaced: false
+      },
+      {
+        id: "mystic-remora",
+        name: "Mystic Remora",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Mystic+Remora&format=image",
+        typeFront: "Encantamento",
+        translationFront: "Manutenção cumulativa {1} (No início de sua manutenção, coloque um marcador de idade nesta permanente e depois sacrifique-a, a menos que pague seu custo de manutenção para cada marcador de idade nela.)\nToda vez que um oponente conjurar uma mágica que não seja de criatura, você pode comprar um card, a menos que aquele jogador pague {4}.",
+        explanationFront: "A melhor carta de compra de início de jogo. O custo de {4} imposto aos oponentes é tão alto que te força a comprar uma carta de graça para cada artefato ou encantamento que eles fizerem.",
+        exampleFront: "Turno 1 você faz a Mystic Remora. No turno do oponente, ele joga Sol Ring e Arcane Signet. Ele não tem 8 manas extras para pagar a taxa. Você compra 2 cartas sem esforço.",
+        notesFront: "Você precisa pagar a manutenção cumulativa no início do seu turno para mantê-la viva (primeiro turno paga 1, depois 2, depois 3). Na maioria das vezes, vale a pena deixá-la morrer no turno 3 ou 4 após ter lotado a sua mão.",
+        isDoubleFaced: false
+      },
+      {
+        id: "thoughtcast",
+        name: "Thoughtcast",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Thoughtcast&format=image",
+        typeFront: "Feitiço",
+        translationFront: "Afinidade por artefatos (Esta mágica custa {1} a menos para ser conjurada para cada artefato que você controla.)\nCompre dois cards.",
+        explanationFront: "A mágica de compra perfeita para a temática do baralho. Com a sua mesa cheia de pedras de mana e tesouros, esse feitiço quase sempre sai pelo seu custo mínimo cravado de apenas 1 mana azul.",
+        exampleFront: "Você tem 4 fichas de Tesouro na mesa. A Afinidade desconta 4 manas genéricas do custo original de 5 ({4}{U}). Você paga apenas uma ilha ({U}) e já compra 2 cartas novinhas.",
+        notesFront: "Todos os múltiplos redutores de custo que você tenha na mesa (como Cloud Key ou Etherium Sculptor) se acumulam matematicamente junto com a Afinidade.",
+        isDoubleFaced: false
+      },
+      {
+        id: "senseis-divining-top",
+        name: "Sensei's Divining Top",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Sensei's+Divining+Top&format=image",
+        typeFront: "Artefato",
+        translationFront: "{1}: Olhe os três cards do topo do seu grimório e depois coloque-os de volta em qualquer ordem.\n{T}: Compre um card e depois coloque Sensei's Divining Top no topo do grimório de seu dono.",
+        explanationFront: "O manipulador de topo supremo. Excelente para organizar as compras e garantir que tutores do deck achem a carta certa. É uma permanente quase impossível de ser destruída pelos inimigos.",
+        exampleFront: "Oponente conjura uma mágica para destruir o seu Topo. Em resposta, você vira ele: você compra a carta do topo do deck e esconde o próprio Topo no topo do seu grimório, fora do alcance da remoção.",
+        notesFront: "Se você tiver o 'Mystic Forge' e um redutor de custo (Etherium Sculptor) em campo, você joga o Topo de graça do topo do baralho infinitas vezes, comprando o deck inteiro.",
+        isDoubleFaced: false
+      },
+      {
+        id: "storm-kiln-artist",
+        name: "Storm-Kiln Artist",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Storm-Kiln+Artist&format=image",
+        typeFront: "Criatura — Anão Xamã",
+        translationFront: "O poder de Artista da Fornalha de Tempestades é igual ao número de artefatos que você controla.\nMagifício — Toda vez que você conjurar ou copiar uma mágica instantânea ou feitiço, crie uma ficha de Tesouro.",
+        explanationFront: "Uma máquina de rampa brutal. Cada cantrip, mágica de compra ou anulação que você jogar vai lhe devolver uma ficha de Tesouro, filtrando e injetando ainda mais mana no seu turno.",
+        exampleFront: "Oponente tenta destruir sua mesa. Você joga 'Fierce Guardianship' de graça. O Magifício desencadeia, você cria um Tesouro e anula a mágica dele. Você literalmente gerou 1 mana para se proteger.",
+        notesFront: "Os tesouros que ele cria contam como artefatos tanto para o bônus de força do próprio anão bater pesado, quanto para engatilhar as condições de vitória e as criações do seu comandante.",
+        isDoubleFaced: false
+      },
+      {
+        id: "repurposing-bay",
+        name: "Repurposing Bay",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Repurposing+Bay&format=image",
+        typeFront: "Artefato",
+        translationFront: "{2}, {T}, Sacrifique outro artefato: Procure em seu grimório um card de artefato com valor de mana igual a 1 mais o valor de mana do artefato sacrificado, coloque esse card no campo de batalha e depois embaralhe. Ative somente como um feitiço.",
+        explanationFront: "Uma ferramenta de busca e progressão (estilo 'Pod') direto em forma de artefato. Permite transformar peças menores ou fichas que perderam utilidade em bombas de custo maior diretamente no campo de batalha.",
+        exampleFront: "Você paga 2 manas, vira a Repurposing Bay e sacrifica uma ficha de Tesouro (custo 0). A habilidade busca um artefato de custo 1 exato no deck (como uma 'Mox Opal' ou um 'Sensei's Divining Top') e o coloca direto em jogo.",
+        notesFront: "A habilidade possui restrição de tempo estrita: 'Ative somente como um feitiço' (sorcery speed). Você só pode usá-la na sua própria fase principal e com a pilha vazia.",
+        isDoubleFaced: false
+      },
+      {
+        id: "iron-man-bleeding-edge",
+        name: "Iron Man, Bleeding Edge",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Iron+Man,+Bleeding+Edge&format=image",
+        typeFront: "Criatura Artefato Lendária — Humano Herói",
+        translationFront: "Voar, ímpeto.\nToda vez que você conjurar uma mágica de artefato, você pode copiá-la, exceto que a cópia não é lendária. Faça isso apenas uma vez a cada turno. (A cópia se torna uma ficha.)",
+        explanationFront: "Uma verdadeira máquina de duplicação. Sempre que você joga o primeiro artefato do turno, ele cria uma cópia exata em formato de ficha direto na pilha, gerando valor dobrado de forma agressiva e burlando restrições de lendas.",
+        exampleFront: "Você conjura o 'The One Ring'. A habilidade do Bleeding Edge desencadeia e cria uma cópia da mágica do Anel como ficha na pilha. Você resolve a cópia, ganha o dobro de gatilhos de entrada e duplica o motor de compra.",
+        notesFront: "A restrição diz 'apenas uma vez a cada turno'. O bônus vale para o *primeiro* artefato que você conjurar em qualquer turno — inclusive no turno dos oponentes, se você tiver maneiras de jogar artefatos em velocidade instantânea.",
+        isDoubleFaced: false
+      },
+      {
+        id: "arc-reactor",
+        name: "Arc-Reactor",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Arc-Reactor&format=image",
+        typeFront: "Artefato",
+        translationFront: "Improvisar (Seus artefatos podem ajudar a conjurar esta mágica. Cada artefato que você virar depois de terminar de ativar habilidades de mana paga {1}.)\nArc-Reactor entra no campo de batalha virado.\n{T}: Adicione {C}{C}{C}.",
+        explanationField: "Uma usina de energia nuclear em forma de pedra de mana. Custa 5 manas para descer, mas o 'Improvisar' faz com que você quase não gaste terrenos reais para pagá-la, recompensando com um giro massivo de 3 manas incolores ({C}{C}{C}) por turno.",
+        exampleFront: "Você tem 5 fichas de Tesouro inoperantes na mesa. Você conjura o Arc-Reactor de 5 manas, vira as 5 fichas para pagar o custo através do Improvisar. O Reator entra virado, mas no seu próximo turno ele desvira e gera 3 manas de uma só vez.",
+        notesFront: "Por entrar no campo de batalha virado, ele não te ajuda a gerar mana no turno em que é jogado, exigindo que você espere um ciclo para usá-lo.",
+        isDoubleFaced: false
+      },
+      {
+        id: "goblin-engineer",
+        name: "Goblin Engineer",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Goblin+Engineer&format=image",
+        typeFront: "Criatura — Goblin Artífice",
+        translationFront: "Quando Goblin Engineer entrar no campo de batalha, você pode procurar em seu grimório um card de artefato, colocá-lo no seu cemitério e depois embaralhar.\n{R}, {T}, Sacrifique um artefato: Devolva o card de artefato alvo com valor de mana 3 ou menos do seu cemitério para o campo de batalha.",
+        explanationFront: "Um 'tutor' direto para o cemitério e um mini-Goblin Welder na mesma carta. Prepara peças de combo e recicla tesouros em artefatos vitais de baixo custo.",
+        exampleFront: "Ele entra e você busca 'Ensnaring Bridge' direto pro cemitério. No próximo turno, você paga {R}, sacrifica um Tesouro e traz a Ponte pra mesa.",
+        notesFront: "Diferente do Welder normal, a habilidade de reanimar dele é limitada a artefatos de custo 3 ou menos, mas ele permite sacrificar artefatos de qualquer custo para pagar a conta.",
+        isDoubleFaced: false
+      },
+      {
+        id: "frantic-search",
+        name: "Frantic Search",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Frantic+Search&format=image",
+        typeFront: "Mágica Instantânea",
+        translationFront: "Compre dois cards, depois descarte dois cards. Desvire até três terrenos.",
+        explanationFront: "Filtra a mão trocando cartas mortas por novas, alimenta o cemitério para o Welder/Engineer, e, por desvirar os terrenos, sai literalmente de graça.",
+        exampleFront: "Você conjura por 3 manas. Compra 2 cartas, descarta um 'Blightsteel Colossus' que estava travado na mão, e desvira as 3 manas que usou, pronto pra jogar mais mágicas.",
+        notesFront: "Se você desvirar terrenos que geram mais de 1 mana (como o 'Izzet Boilerworks' ou o 'Training Center' se você tiver redutores), essa mágica vai GERAR mana extra.",
+        isDoubleFaced: false
+      },
+      {
+        id: "kappa-cannoneer",
+        name: "Kappa Cannoneer",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Kappa+Cannoneer&format=image",
+        typeFront: "Criatura Artefato — Tartaruga Guerreiro",
+        translationFront: "Improvisar.\nSalvaguarda {4} (Toda vez que esta criatura for alvo de uma mágica ou habilidade de um oponente, anule-a, a menos que o jogador pague {4}.)\nToda vez que um artefato entrar no campo de batalha sob seu controle, coloque um marcador +1/+1 em Kappa Cannoneer e ele não pode ser bloqueado neste turno.",
+        explanationFront: "Uma ameaça letal imbloqueável e extremamente difícil de remover. Custa quase zero graças aos seus tesouros e bate direto nos pontos de vida de forma consistente.",
+        exampleFront: "Iron Man ataca, criando um Tesouro. O Tesouro entra, ativa o Kappa, que ganha +1/+1 e fica imbloqueável. Você ataca livremente o oponente que não tem defesa.",
+        notesFront: "A Salvaguarda (Ward) é punitiva. Se o oponente lançar um 'Path to Exile' sem ter 4 manas extras sobrando, a mágica dele é apenas anulada e vai para o cemitério.",
+        isDoubleFaced: false
+      },
+      {
+        id: "thran-dynamo",
+        name: "Thran Dynamo",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Thran+Dynamo&format=image",
+        typeFront: "Artefato",
+        translationFront: "{T}: Adicione {C}{C}{C}.",
+        explanationFront: "Uma das pedras de mana mais fortes do formato. Ela te joga 3 turnos para frente imediatamente em quesito de produção de recursos para baixar suas mágicas pesadas.",
+        exampleFront: "Você usa 4 manas para descer o Dynamo. Ele já entra desvirado, você o vira para gerar 3 manas incolores e usa para conjurar uma 'Cloud Key' ou 'Trinket Mage' no mesmo turno.",
+        notesFront: "Gera mana incolor ({C}). Perfeita para os custos genéricos das mágicas, mas não ajuda em custos com símbolos específicos (Vermelho ou Azul).",
+        isDoubleFaced: false
+      },
+      {
+        id: "mana-drain",
+        name: "Mana Drain",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Mana+Drain&format=image",
+        typeFront: "Mágica Instantânea",
+        translationFront: "Anule a mágica alvo. No início da sua próxima fase principal, adicione uma quantidade de {C} igual ao valor de mana daquela mágica.",
+        explanationFront: "O 'Counterspell' mais poderoso do Commander. Protege o seu jogo enquanto rouba o ímpeto do oponente, convertendo a ameaça dele em rampa massiva pra você.",
+        exampleFront: "Oponente conjura um feitiço de custo 7. Você anula com Mana Drain. No início do seu turno, você ganha 7 manas de graça para baixar seu 'Portal to Phyrexia'.",
+        notesFront: "A mana é adicionada na SUA próxima fase principal. Se você anular algo no turno do oponente, ganha na sua Fase Principal 1. Se anular algo no seu próprio turno, ganha na Fase Principal 2.",
+        isDoubleFaced: false
+      },
+      {
+        id: "crystal-skull-isu-spyglass",
+        name: "Crystal Skull, Isu Spyglass",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Crystal+Skull,+Isu+Spyglass&format=image",
+        typeFront: "Artefato Lendário",
+        translationFront: "Conforme Crystal Skull, Isu Spyglass entra no campo de batalha, escolha um oponente.\n{2}, {T}: Olhe o card do topo do grimório do jogador escolhido. Se for um card de artefato, criatura ou terreno, você pode revelá-lo e colocá-lo na sua mão.",
+        explanationFront: "Uma ferramenta de roubo contínuo de recursos. Permite espiar o baralho do oponente mais perigoso e furtar as ameaças (ou terrenos) dele diretamente para a sua mão.",
+        exampleFront: "Você nomeia o jogador à sua esquerda. Paga 2 manas e vira a Caveira. Vê que a carta de cima dele é uma Fetch Land. Você a pega pra sua mão e impede que ele a compre.",
+        notesFront: "A carta furtada vai para a SUA mão e passa a te pertencer durante aquele jogo, garantindo vantagem de cartas (Card Advantage) com a força do baralho alheio.",
+        isDoubleFaced: false
+      },
+      {
+        id: "shuri-wakandan-inventor",
+        name: "Shuri, Wakandan Inventor",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Shuri,+Wakandan+Inventor&format=image",
+        typeFront: "Criatura Lendária — Humano Artífice",
+        translationFront: "As mágicas de artefato que você conjura custam {1} a menos para serem conjuradas.\n{T}: Escolha o card de artefato alvo no seu cemitério. Você pode conjurar aquele card neste turno.",
+        explanationFront: "Dupla funcionalidade: um redutor de custo de artefatos estático (igual ao Etherium Sculptor) e um efeito idêntico ao da Emry embutido numa mesma carta.",
+        exampleFront: "Reduz o custo dos artefatos. Você vira a Shuri e dá alvo numa 'Wayfarer's Bauble' destruída. Conjura ela de volta do cemitério direto pra mesa.",
+        notesFront: "Assim como a Emry, ela apenas lhe dá a PERMISSÃO para conjurar. Você ainda precisará pagar os custos de mana do artefato normalmente do cemitério.",
+        isDoubleFaced: false
+      },
+      {
+        id: "swan-song",
+        name: "Swan Song",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Swan+Song&format=image",
+        typeFront: "Mágica Instantânea",
+        translationFront: "Anule a mágica alvo de encantamento, instantânea ou feitiço. O controlador daquela mágica cria uma ficha de criatura Pássaro azul 2/2 com voar.",
+        explanationFront: "A anulação de 1 mana mais eficiente do jogo. Impede os combos letais dos oponentes em troca de dar a eles uma ficha de passarinho que não faz cócegas no Commander.",
+        exampleFront: "Oponente conjura uma 'Cyclonic Rift' com Sobrecarga que acabaria com seu jogo. Você vira apenas {U} e conjura Swan Song. A Rift falha e ele fica com um pássaro 2/2 inofensivo.",
+        notesFront: "Não alveja criaturas. Só funciona contra Encantamentos, Instantâneas e Feitiços.",
+        isDoubleFaced: false
+      },
+      {
+        id: "phyrexian-metamorph",
+        name: "Phyrexian Metamorph",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Phyrexian+Metamorph&format=image",
+        typeFront: "Artefato Criatura — Metamorfo",
+        translationFront: "Você pode pagar 2 pontos de vida em vez de pagar {U} do custo de mana de Phyrexian Metamorph.\nConforme entra no campo de batalha, você pode escolhê-lo como uma cópia de qualquer artefato ou criatura.",
+        explanationFront: "O clone mais versátil do jogo. Custa virtualmente 3 manas (e 2 pontos de vida). Pode copiar as suas maiores bombas ou as maiores ameaças (criaturas ou pedras de mana) que estiverem sob o controle inimigo.",
+        exampleFront: "O oponente tem o 'Urza, Lord High Artificer'. Você conjura o Metamorph copiando o Urza dele. Você passa a ter todas as habilidades de cassino e mana azul do Urza a seu favor.",
+        notesFront: "Não dá alvo. Se você escolher copiar um artefato inimigo que tem 'Manto' ou 'Resistência à Magia', a cópia funciona e burla a proteção perfeitamente.",
+        isDoubleFaced: false
+      },
+      {
+        id: "deflecting-swat",
+        name: "Deflecting Swat",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Deflecting+Swat&format=image",
+        typeFront: "Mágica Instantânea",
+        translationFront: "Se você controlar um comandante, você poderá conjurar esta mágica sem pagar seu custo de mana.\nDesvie o alvo da mágica ou habilidade alvo para um novo alvo.",
+        explanationFront: "Sua melhor defesa ativa. Uma mágica gratuita (Free Spell) que pega a remoção engatilhada contra você e joga de volta na cara de quem mandou.",
+        exampleFront: "Oponente conjura 'Swords to Plowshares' no seu Iron Man. Você não tem mana sobrando, mas joga o Deflecting Swat de graça da mão. Você muda o alvo da espada para o Comandante inimigo, destruindo-o.",
+        notesFront: "Funciona contra Habilidades também, não só feitiços. Se um oponente ativar a habilidade da 'Boseiju' para quebrar um artefato seu, você redireciona o alvo pro artefato dele.",
+        isDoubleFaced: false
+      },
+      {
+        id: "pongify",
+        name: "Pongify",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Pongify&format=image",
+        typeFront: "Mágica Instantânea",
+        translationFront: "Destrua a criatura alvo. Ela não pode ser regenerada. O controlador daquela criatura cria uma ficha de criatura Macaco verde 3/3.",
+        explanationFront: "Uma remoção de custo baixíssimo (1 mana azul). Destruir o comandante principal de um oponente ou uma criatura que te mataria e dar um mero macaco 3/3 em troca é um excelente negócio no Commander.",
+        exampleFront: "O oponente gasta 8 manas para descer um monstro que limpa a mesa. Você vira {U} e conjura Pongify. O monstro morre e o oponente chora com um macaco na mesa.",
+        notesFront: "Não contorna 'Indestrutível', mas bloqueia cartas que usam a mecânica antiga de 'Regenerar'.",
+        isDoubleFaced: false
+      },
+      {
+        id: "solemn-simulacrum",
+        name: "Solemn Simulacrum",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Solemn+Simulacrum&format=image",
+        typeFront: "Criatura Artefato — Golem",
+        translationFront: "Quando Solemn Simulacrum entrar no campo de batalha, você pode procurar em seu grimório um card de terreno básico, colocá-lo virado no campo e embaralhar.\nQuando ele morrer, você pode comprar um card.",
+        explanationFront: "O 'Robô Triste' é o melhor amigo dos seus combos de sacrifício. Ele acelera a sua mana (ramp) assim que entra e ainda recompõe a sua mão no momento em que vira sucata.",
+        exampleFront: "Ele entra e você busca uma Ilha. No combate, o Iron Man ataca e você escolhe sacrificar o Simulacrum. Você busca um artefato de custo 5 do deck pelo Iron Man e ainda compra uma carta pela morte do robô.",
+        notesFront: "Um alvo primoroso para ficar reciclando do cemitério pro campo de batalha com o Daretti ou o Goblin Welder.",
+        isDoubleFaced: false
+      },
+      {
+        id: "brainstorm",
+        name: "Brainstorm",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Brainstorm&format=image",
+        typeFront: "Mágica Instantânea",
+        translationFront: "Compre três cards e depois coloque dois cards de sua mão no topo de seu grimório em qualquer ordem.",
+        explanationFront: "Vantagem tática absurda. Permite cavar profundamente atrás de respostas e proteger suas peças mais importantes na mão de descartes oponentes, ou arrumar o topo para o seu Comandante.",
+        exampleFront: "Você tem um 'Blightsteel Colossus' travado na mão que não consegue conjurar. Você joga Brainstorm, compra 3 cartas, e devolve o Colosso pro topo do baralho. Depois usa a armadura do Iron Man para puxá-lo do deck de graça.",
+        notesFront: "Use isso DEPOIS que a habilidade do Tony Stark de espiar o baralho não te agradar, ou ANTES de estourar uma 'Wayfarer's Bauble', para você poder embaralhar as duas cartas ruins que devolveu pro topo.",
+        isDoubleFaced: false
+      },
+      {
+        id: "jeskas-will",
+        name: "Jeska's Will",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Jeska's+Will&format=image",
+        typeFront: "Feitiço",
+        translationFront: "Escolha um. Se controlar um comandante, escolha ambos.\n• Adicione {R} para cada card na mão do oponente alvo.\n• Exile os três cards do topo do grimório. Você pode jogá-los neste turno.",
+        explanationFront: "A carta vermelha mais forte de 'explosão' do formato. Com o Iron Man na mesa, ela te dá uma quantidade massiva de mana vermelha E te dá 3 cartas extras virtuais pra você gastar essa mana no mesmo turno.",
+        exampleFront: "Iron Man está na mesa. Você conjura dando alvo no oponente que tem 7 cartas na mão. Você adiciona 7 manas vermelhas instantaneamente e ainda exila 3 cartas do topo que poderão ser jogadas no seu turno.",
+        notesFront: "As cartas exiladas podem ser de qualquer tipo (incluindo terrenos). Se houver um terreno lá, você pode jogá-lo (desde que não tenha jogado um terreno no turno ainda).",
+        isDoubleFaced: false
+      },
+      {
+        id: "academy-manufactor",
+        name: "Academy Manufactor",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Academy+Manufactor&format=image",
+        typeFront: "Criatura Artefato — Montador",
+        translationFront: "Se você criaria uma ficha de Pista, Comida ou Tesouro, em vez disso, crie uma de cada.",
+        explanationFront: "Um multiplicador de produção insano. Toda vez que o seu deck for criar um mísero Tesouro, ele triplicará a produção em valor puro na forma de artefatos adicionais para a sua mesa.",
+        exampleFront: "O Iron Man ataca e a habilidade dele cria 1 Tesouro. O Manufactor substitui a criação e você ganha 1 Tesouro, 1 Comida (para ganhar vida) e 1 Pista (para comprar carta). São 3 artefatos novos pra você abusar de sinergias.",
+        notesFront: "Sua 'Maestria com Metais' (da Mox Opal) e seus redutores de 'Afinidade' (Thoughtcast) ficam online de maneira assustadoramente rápida com ele em jogo.",
+        isDoubleFaced: false
+      },
+      {
+        id: "negate",
+        name: "Negate",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Negate&format=image",
+        typeFront: "Mágica Instantânea",
+        translationFront: "Anule a mágica alvo que não seja de criatura.",
+        explanationFront: "Uma proteção clássica e extremamente confiável. Sendo um baralho de artefatos, as suas maiores fraquezas são as limpezas globais que quebram artefatos (que são feitiços). O Negate protege contra tudo isso.",
+        exampleFront: "Oponente conjura 'Farewell' ou 'Vandalblast', mágicas que iriam exilar ou destruir a sua base inteira. Você deixa 2 manas abertas, joga o Negate e salva horas do seu planejamento em um segundo.",
+        notesFront: "Não funciona para anular Criaturas conjuradas pelos oponentes. Use-o para proteger o seu próprio combo ou impedir Planeswalkers, Encantamentos e Feitiços perigosos.",
+        isDoubleFaced: false
+      },
+      {
+        id: "arcane-denial",
+        name: "Arcane Denial",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Arcane+Denial&format=image",
+        typeFront: "Mágica Instantânea",
+        translationFront: "Anule a mágica alvo. Seu controlador pode comprar até dois cards no início da manutenção do próximo turno.\nVocê compra um card no início da manutenção do próximo turno.",
+        explanationFront: "Uma anulação 'política' excelente. Ela anula qualquer tipo de mágica (incluindo criaturas, diferente do Negate) com um custo bem fácil de pagar. Você consome a ameaça do oponente, dá um 'prêmio de consolação' para ele não ficar tão zangado e ainda compra uma carta.",
+        exampleFront: "Oponente está combando e vai ganhar. Você anula e para o combo. No próximo turno, ele repõe a mão com 2 cartas e você repõe o seu Arcane Denial comprando 1.",
+        notesFront: "Se o jogo estiver em uma situação desesperadora e você precisar comprar cartas, você pode anular uma mágica inútil sua mesma! Assim você compra 3 cartas (duas por ser o controlador da mágica anulada e uma por ser o conjurador do Arcane Denial).",
+        isDoubleFaced: false
+      },
+      {
+        id: "galvanic-blast",
+        name: "Galvanic Blast",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Galvanic+Blast&format=image",
+        typeFront: "Mágica Instantânea",
+        translationFront: "Causa 2 pontos de dano a qualquer alvo.\nMaestria com metais — Se você controlar três ou mais artefatos, em vez disso, Galvanic Blast causará 4 pontos de dano àquele alvo.",
+        explanationFront: "O 'Lightning Bolt' tunado para os decks de artefato. Por 1 mana, poder dar 4 de dano resolve 90% das criaturas mais problemáticas e comandantes inimigos do jogo, inclusive em velocidade instantânea.",
+        exampleFront: "Oponente desce uma 'Drannith Magistrate' ou um Planeswalker irritante. Você tem seus tesouros na mesa, paga {R}, aplica 4 de dano direto e remove a ameaça de circulação baratinho.",
+        notesFront: "Você precisa ter os 3 artefatos no momento exato em que a mágica RESOLVER. Se o oponente responder quebrando seus artefatos até você ficar com 2, o dano cai de volta para apenas 2 pontos.",
+        isDoubleFaced: false
+      },
+      {
+        id: "mystic-forge",
+        name: "Mystic Forge",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Mystic+Forge&format=image",
+        typeFront: "Artefato",
+        translationFront: "Você pode olhar o card do topo do seu grimório a qualquer momento.\nVocê pode conjurar mágicas de artefato e mágicas incolor do topo do seu grimório.\n{T}, Pague 1 ponto de vida: Exile o card do topo do seu grimório.",
+        explanationFront: "Transforma o topo do seu baralho em uma extensão da sua mão. Essencialmente permite que você jogue quase todo o seu deck sem precisar comprá-lo, guardando as cartas da sua mão pra quando for necessário.",
+        exampleFront: "O topo do seu deck é um 'Sol Ring'. Você o conjura de lá mesmo. Revela-se um 'Sensei's Divining Top' embaixo, que você também conjura. Se aparecer um terreno (que não pode ser jogado pelo Forge), você vira a Forja, paga 1 de vida, exila o terreno e tenta a sorte com a próxima carta.",
+        notesFront: "Terrenos são incolores, mas você não CONJURA (cast) terrenos, você os JOGA. Logo, não é permitido jogar terrenos do topo usando esta carta.",
+        isDoubleFaced: false
+      },
+      {
+        id: "mind-stone",
+        name: "Mind Stone",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Mind+Stone&format=image",
+        typeFront: "Artefato",
+        translationFront: "{T}: Adicione {C}.\n{1}, {T}, Sacrifique Mind Stone: Compre um card.",
+        explanationFront: "A pedra de mana perfeita para o meio do jogo (mid-game). Ela rampa suas mágicas nos turnos iniciais e, quando você estiver cheio de terrenos e precisar de respostas, se transforma em uma carta extra.",
+        exampleFront: "Você a usa para acelerar o jogo do turno 2 até o turno 6. No turno 7, alguém limpa a mesa e você não tem nada. Você paga {1}, sacrifica ela, compra uma carta na tentativa de voltar ao jogo.",
+        notesFront: "Como a maioria dos artefatos baratos do deck, é também excelente para ser sacrificada voluntariamente para ativar a habilidade do Comandante na fase de combate em vez de puxar a carta.",
+        isDoubleFaced: false
+      },
+      {
+        id: "ichor-wellspring",
+        name: "Ichor Wellspring",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Ichor+Wellspring&format=image",
+        typeFront: "Artefato",
+        translationFront: "Quando Ichor Wellspring entrar no campo de batalha ou for colocado num cemitério vindo do campo de batalha, compre um card.",
+        explanationFront: "O 'primo rico' da Mycosynth Wellspring. Funciona como motor de compra passivo imediato, dobrando o seu valor e comprando mais cartas quando você o sacrifica.",
+        exampleFront: "Você conjura, paga 2 manas e compra 1 carta. Depois, o sacrifica para a habilidade de ataque do Iron Man: você busca um artefato de custo 3 do baralho e a morte da Wellspring te faz comprar mais 1 carta.",
+        notesFront: "Se ele for destruído, sacrificado ou trocado via Goblin Welder, o gatilho de cemitério sempre garantirá a carta extra de consolação.",
+        isDoubleFaced: false
+      },
+      {
+        id: "scrap-trawler",
+        name: "Scrap Trawler",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Scrap+Trawler&format=image",
+        typeFront: "Criatura Artefato — Construto",
+        translationFront: "Toda vez que Scrap Trawler ou outro artefato que você controla for colocado num cemitério vindo do campo de batalha, devolva para sua mão o card de artefato alvo em seu cemitério com valor de mana menor.",
+        explanationFront: "Uma das engrenagens mais perigosas e combativas do jogo. Ele transforma cada sacrifício ou destruição em uma bola de neve, resgatando continuamente peças menores e mais baratas para a sua mão.",
+        exampleFront: "Você sacrifica o 'Myr Retriever' (custo 2). O gatilho do Scrap Trawler aciona, resgatando a 'Mox Opal' (custo 0) para sua mão. O próprio gatilho do Myr te devolve outro artefato qualquer.",
+        notesFront: "O valor de mana resgatado DEVE ser estritamente menor que o do artefato que morreu. Uma ficha (custo 0) morta não consegue resgatar nada por causa dessa regra.",
+        isDoubleFaced: false
+      },
+      {
+        id: "esoteric-duplicator",
+        name: "Esoteric Duplicator",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Esoteric+Duplicator&format=image",
+        typeFront: "Artefato",
+        translationFront: "Toda vez que um artefato que você controla for colocado no seu cemitério vindo do campo de batalha, você pode pagar {2}. Se fizer isso, crie uma ficha que seja uma cópia daquele artefato no início da próxima etapa final.",
+        explanationFront: "Uma máquina de reaproveitamento de longo prazo. Garante que os artefatos vitais que você precisou estourar para combo (ou que o inimigo quebrou) voltem como cópias e continuem operando.",
+        exampleFront: "Você vira e sacrifica a 'Mind Stone' pra comprar uma carta. Aciona o Duplicator, paga {2}. No final do turno, uma ficha perfeitamente idêntica à Mind Stone é criada na sua mesa.",
+        notesFront: "O pagamento de {2} manas deve ser feito na hora que o artefato MORRE. A cópia só entrará em campo na Etapa Final.",
+        isDoubleFaced: false
+      },
+      {
+        id: "foundry-inspector",
+        name: "Foundry Inspector",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Foundry+Inspector&format=image",
+        typeFront: "Criatura Artefato — Construto",
+        translationFront: "As mágicas de artefato que você conjura custam {1} a menos para serem conjuradas.",
+        explanationFront: "Um redutor de custo mecânico clássico, atuando como espelho do 'Etherium Sculptor' ou da 'Cloud Key'. Serve para criar redundância e fazer o deck rodar rápido.",
+        exampleFront: "Com ele em campo, o 'Arcane Signet' (custo 2) custará apenas 1 mana genérica, sobrando mana no seu turno para continuar enchendo o campo de batalha.",
+        notesFront: "Ele é incolor e pode ser conjurado usando apenas os recursos genéricos de um 'Sol Ring' no turno 1, acelerando tudo nos turnos seguintes.",
+        isDoubleFaced: false
+      },
+      {
+        id: "enthusiastic-mechanaut",
+        name: "Enthusiastic Mechanaut",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Enthusiastic+Mechanaut&format=image",
+        typeFront: "Criatura — Goblin Artífice",
+        translationFront: "Voar.\nAs mágicas de artefato que você conjura custam {1} a menos para serem conjuradas.",
+        explanationFront: "Outro excelente redutor de custos passivo que barateia a maioria do deck, mas possui as cores de identidade Izzet e oferece evasão para bloqueios emergenciais no ar.",
+        exampleFront: "Tendo ele e o 'Foundry Inspector' ao mesmo tempo na mesa, seus artefatos recebem desconto cumulativo, custando {2} manas genéricas a menos. Peças como o 'Lightning Greaves' passam a custar 0.",
+        notesFront: "Redutores de custo de artefato só descontam a mana INCOLOR ({1}, {2}, {3}...). A mana Azul ou Vermelha sempre terá que ser paga.",
+        isDoubleFaced: false
+      },
+      {
+        id: "swiftfoot-boots",
+        name: "Swiftfoot Boots",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Swiftfoot+Boots&format=image",
+        typeFront: "Artefato — Equipamento",
+        translationFront: "A criatura equipada tem resistência à magia e ímpeto. (Não pode ser alvo de mágicas ou habilidades de seus oponentes.)\nEquipar {1}.",
+        explanationFront: "A bota gêmea das Lightning Greaves. Custa uma mana a mais para equipar, mas sua 'Resistência à Magia' (Hexproof) permite que VOCÊ continue interagindo com a sua criatura livremente.",
+        exampleFront: "Você desce o Iron Man e equipa a Swiftfoot Boots por 1 mana. Ele fica imune a alvejamentos inimigos, mas você ainda consegue vestir nele uma espada, dar buffs ou até copiá-lo com um Metamorph.",
+        notesFront: "Diferente de 'Manto', 'Resistência à Magia' é unilateral (assimétrica). Você não fica bloqueado das suas próprias mágicas.",
+        isDoubleFaced: false
+      },
+      {
+        id: "commanders-plate",
+        name: "Commander's Plate",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Commander's+Plate&format=image",
+        typeFront: "Artefato — Equipamento",
+        translationFront: "A criatura equipada recebe +3/+3 e tem proteção contra cada cor que não esteja na identidade de cor do seu comandante.\nEquipar {3}.",
+        explanationFront: "Uma armadura absurda que oferece quase que uma blindagem total. Por o Iron Man ser das cores Azul e Vermelha, esta placa concederá à criatura equipada proteção vital contra Branco, Preto e Verde.",
+        exampleFront: "Equipado no Iron Man. Um oponente tenta destruí-lo com 'Assassin's Trophy' (Verde e Preto) ou exilá-lo com 'Path to Exile' (Branco). Como o Iron Man tem proteção contra essas três cores, a mágica do oponente não pode dar alvo nele.",
+        notesFront: "Proteção significa que a criatura não pode ser Alvejada (Target), Bloqueada (Blocked), Sofrer Dano (Damaged) ou ser Encantada (Enchanted) por fontes daquelas cores.",
+        isDoubleFaced: false
+      },
+      {
+        id: "fellwar-stone",
+        name: "Fellwar Stone",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Fellwar+Stone&format=image",
+        typeFront: "Artefato",
+        translationFront: "{T}: Adicione um mana de qualquer cor que um terreno controlado por um oponente poderia produzir.",
+        explanationFront: "A pedra de mana de 2 custos preferida no ambiente multiplayer. Sendo quatro jogadores na mesa, é praticamente estatisticamente garantido que algum inimigo vá ter terrenos vermelhos ou azuis.",
+        exampleFront: "Turno 2. O oponente tem uma Ilha. Você desce a Fellwar Stone. Ela entra desvirada e instantaneamente pode gerar uma mana Azul pra você guardar uma anulação defensiva, usando o próprio terreno inimigo como referência.",
+        notesFront: "Se ninguém na mesa tiver controle de um terreno capaz de produzir as cores que você precisa (exemplo, estão jogando de verde, branco e preto), ela vai produzir apenas cores inúteis pra sua identidade de Comandante, ou nenhuma mana se não houver terrenos.",
+        isDoubleFaced: false
+      },
+      {
+        id: "sculpting-steel",
+        name: "Sculpting Steel",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Sculpting+Steel&format=image",
+        typeFront: "Artefato",
+        translationFront: "Conforme Sculpting Steel entra no campo de batalha, você pode escolhê-lo como uma cópia de qualquer artefato no campo de batalha.",
+        explanationFront: "Se comporta exatamente como um Phyrexian Metamorph restrito, voltado só pra sua classe de cartas. Clona qualquer bomba de artefato (sua ou inimiga) pelo módico preço de 3 manas.",
+        exampleFront: "O oponente usou 9 manas para baixar o 'Portal to Phyrexia'. Você conjura Sculpting Steel copiando o Portal. Você pagou apenas 3 manas para forçar o inimigo a sacrificar as próprias criaturas.",
+        notesFront: "Efeitos de entrada de 'cópias' não dão alvo. Portanto, se você copiar um artefato com 'Resistência à Magia' (Hexproof) do oponente, você consegue clonar normalmente burlando o bloqueio.",
+        isDoubleFaced: false
+      },
+      {
+        id: "thought-vessel",
+        name: "Thought Vessel",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Thought+Vessel&format=image",
+        typeFront: "Artefato",
+        translationFront: "Você não tem um limite máximo de tamanho de mão.\n{T}: Adicione {C}.",
+        explanationFront: "Uma utilidade dois em um: é uma pedra barata (custo 2) para a rampa e a garantia de que as cartas massivas que seu deck compra (com Rhystic Study ou Mystic Remora) fiquem blindadas do descarte obrigatório.",
+        exampleFront: "Ao final do turno com 'Rhystic Study' na mesa você ficou com 11 cartas na mão. A regra natural obriga a descartar 4 e ficar com 7. Como o Thought Vessel está em campo, você quebra a regra e preserva o seu estoque inteiro.",
+        notesFront: "Gera apenas mana incolor ({C}). Cuidado ao remover a carta ou sacrificá-la: se a permanente deixar a mesa na etapa de encerramento do turno, a limitação de 7 cartas voltará a ser exigida em alguns casos e as cartas vão para o cemitério.",
+        isDoubleFaced: false
+      },
+      {
+        id: "chaos-warp",
+        name: "Chaos Warp",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Chaos+Warp&format=image",
+        typeFront: "Mágica Instantânea",
+        translationFront: "O dono da permanente alvo embaralha aquela permanente em seu grimório, depois revela o card do topo de seu grimório. Se for um card de permanente, ele o coloca no campo de batalha.",
+        explanationFront: "A remoção vermelha mais versátil (e caótica). Consegue lidar com qualquer tipo de ameaça (inclusive encantamentos gigantes, que o Vermelho normalmente não tem como destruir), forçando a carta de volta pro baralho, mesmo que ela seja indestrutível.",
+        exampleFront: "O oponente tem um encantamento que não te deixa atacar. Você conjura Chaos Warp no encantamento dele. Ele embaralha a carta no deck e, com sorte, revela apenas uma Ilha inofensiva no topo.",
+        notesFront: "Você pode usá-lo nas SUAS PRÓPRIAS permanentes. Se um oponente for exilar o seu Iron Man, em resposta você lança Chaos Warp no seu próprio Iron Man, joga ele pro baralho e tem a chance de revelar outra permanente poderosa de graça.",
+        isDoubleFaced: false
+      },
+      {
+        id: "an-offer-you-cant-refuse",
+        name: "An Offer You Can't Refuse",
+        imageFront: "https://api.scryfall.com/cards/named?exact=An+Offer+You+Can't+Refuse&format=image",
+        typeFront: "Mágica Instantânea",
+        translationFront: "Anule a mágica alvo que não seja de criatura. Seu controlador cria duas fichas de Tesouro.",
+        explanationFront: "Um dos melhores feitiços de proteção do Commander. O custo de apenas {U} compensa absurdamente o fato de você 'dar' duas fichas de Tesouro para o oponente em troca de arruinar os planos de vitória dele.",
+        exampleFront: "Oponente conjura uma magia de destruição em massa. Você conjura a Offer pagando apenas 1 mana azul. A limpeza dele falha, e o máximo que ele ganha são 2 tesouros como prêmio de consolação.",
+        notesFront: "Em emergências onde você precisa desesperadamente de rampa de artefatos para fechar um combo com o Simulacrum Synthesizer, você pode anular uma mágica minúscula SUA mesmo, ganhando 2 tesouros no processo.",
+        isDoubleFaced: false
+      },
+      {
+        id: "blasphemous-act",
+        name: "Blasphemous Act",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Blasphemous+Act&format=image",
+        typeFront: "Feitiço",
+        translationFront: "Esta mágica custa {1} a menos para ser conjurada para cada criatura no campo de batalha.\nAto Blasfemo causa 13 pontos de dano a cada criatura.",
+        explanationFront: "A principal 'limpeza de mesa' do Vermelho. Em jogos multiplayer, a mesa frequentemente enche de criaturas, reduzindo o custo desta mágica a um módico e quase irrisório custo de {R} para 13 de dano absoluto.",
+        exampleFront: "Se houver 8 criaturas somadas entre as mesas de todos os oponentes. O custo do feitiço reduz em 8, e ele custará apenas {R}. Você limpa o campo inteiro dos adversários.",
+        notesFront: "O dano atinge as SUAS criaturas também. Como não dá alvo, lida com criaturas protegidas por 'Manto' (Shroud) ou 'Resistência à Magia' (Hexproof).",
+        isDoubleFaced: false
+      },
+      {
+        id: "counterspell",
+        name: "Counterspell",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Counterspell&format=image",
+        typeFront: "Mágica Instantânea",
+        translationFront: "Anule a mágica alvo.",
+        explanationFront: "O clássico absoluto e a resposta mais pura e direta de todo o jogo. Por duas manas, ele diz 'Não' perfeitamente para qualquer coisa que qualquer jogador na mesa tente fazer.",
+        exampleFront: "Oponente conjura o Comandante principal da estratégia dele. Você vira {U}{U}, conjura Counterspell e o comandante inimigo é forçado de volta para a Zona de Comando antes sequer de tocar o campo.",
+        notesFront: "Por exigir dois símbolos azuis específicos, tesouros, pedras de mana puramente incolores (como Sol Ring e Thran Dynamo) não ajudam no pagamento desta conta.",
+        isDoubleFaced: false
+      },
+      {
+        id: "izzet-signet",
+        name: "Izzet Signet",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Izzet+Signet&format=image",
+        typeFront: "Artefato",
+        translationFront: "{1}, {T}: Adicione {U}{R}.",
+        explanationFront: "Um Sinete vital que funciona como conversor. Ele 'filtra' mana incolor e purifica para a mana colorida que você mais precisa para operar seu baralho.",
+        exampleFront: "Você tem um 'Sol Ring' em jogo que gera apenas manas incolores ({C}{C}). Você usa uma dessas manas incolores para pagar o custo de ativação do Sinete e transformá-la em 1 mana Azul e 1 Vermelha ({U}{R}).",
+        notesFront: "Diferente do Arcane Signet, ele não gera mana sozinho, exigindo obrigatoriamente que você gaste 1 mana de qualquer origem para 'ativar' o processo de filtragem dele.",
+        isDoubleFaced: false
+      },
+      {
+        id: "talisman-of-creativity",
+        name: "Talisman of Creativity",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Talisman+of+Creativity&format=image",
+        typeFront: "Artefato",
+        translationFront: "{T}: Adicione {C}.\n{T}: Adicione {U} ou {R}. O Talismã da Criatividade causa 1 ponto de dano a você.",
+        explanationFront: "Complemento perfeito para as suas pedras de mana do turno 2. Funciona instantaneamente ao cair na mesa e conserta sua falta de terrenos coloridos ao preço de apenas uma picada de mosquito nos pontos de vida.",
+        exampleFront: "Você o desce. Se precisa só de mais mana pra baixar um artefato incolor (como Thought Vessel), você escolhe a primeira opção e não perde vida. Se precisa guardar mana azul pra 'Swan Song', você vira na segunda opção e leva apenas 1 de dano.",
+        notesFront: "No Commander você inicia com fartos 40 de vida, logo o dano acumulado dele ao longo do jogo costuma ser absolutamente irrelevante se comparado ao impulso de velocidade que ele te dá.",
+        isDoubleFaced: false
+      },
+      {
+        id: "rogues-passage",
+        name: "Rogue's Passage",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Rogue's+Passage&format=image",
+        typeFront: "Terreno",
+        translationFront: "{T}: Adicione {C}.\n{4}, {T}: A criatura alvo não pode ser bloqueada neste turno.",
+        explanationFront: "Terreno de suporte ofensivo perfeito. Ele rampa incolor nos turnos iniciais, e no final da partida transforma as suas criaturas gigantes, ou até mesmo o Comandante inimigo alheio, em ataques letais invisíveis.",
+        exampleFront: "O seu 'Blightsteel Colossus' foi colocado em jogo. Ele mataria o oponente em um hit, mas o inimigo tem fichas 1/1 sobrando. Você paga as manas da Passagem e deixa o Colosso imbloqueável; o golpe letal entra limpo.",
+        notesFront: "Você deve ativar a habilidade imbloqueável ANTES do oponente declarar os bloqueadores (idealmente durante a Etapa de Declaração de Atacantes).",
+        isDoubleFaced: false
+      },
+      {
+        id: "riverpyre-verge",
+        name: "Riverpyre Verge",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Riverpyre+Verge&format=image",
+        typeFront: "Terreno",
+        translationFront: "{T}: Adicione {U}.\n{T}: Adicione {U} ou {R}. Ative somente se você controlar uma Montanha.",
+        explanationFront: "Um terreno moderno super seguro (parte dos 'Verge Lands'). Ele sempre funciona como uma Ilha no mínimo, e vira uma Dual Land premium e sem condições prejudiciais se você tiver o equivalente a uma montanha.",
+        exampleFront: "Você desce no turno 1 e usa para gerar {U} e conjurar um 'Ponder'. No turno 2, você desce um Terreno Básico de Montanha. O Riverpyre detecta e agora serve perfeitamente para conjurar os artefatos com símbolos Izzet.",
+        notesFront: "A verificação por 'Montanha' não exige um Terreno Básico. Se você baixar 'Steam Vents' (Terreno — Ilha Montanha), ele validará o Riverpyre Verge na mesma hora.",
+        isDoubleFaced: false
+      },
+      {
+        id: "otawara-soaring-city",
+        name: "Otawara, Soaring City",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Otawara,+Soaring+City&format=image",
+        typeFront: "Terreno Lendário",
+        translationFront: "{T}: Adicione {U}.\nCanalizar — {3}{U}, Descarte Otawara, Cidade Planadora: Devolva a permanente alvo que seja artefato, criatura, encantamento ou planeswalker para a mão do dono. (Custa {1} a menos para cada criatura lendária controlada).",
+        explanationFront: "Ocupa lugar de terreno, mas em uma mão engasgada atua como um feitiço imune a 'Counterspell'. A utilidade de um recurso que não pode ser anulado não tem preço.",
+        exampleFront: "Oponente conjurou um artefato que te impede de jogar (ex: 'Collector Ouphe'). Você descarta Otawara (já que o Tony e a Jhoira são lendas e reduzem o custo) e devolve a ameaça para a mão do oponente, destravando a sua mesa.",
+        notesFront: "A habilidade 'Canalizar' é uma Habilidade Ativada. Por isso, mágicas convencionais como 'Negate' não podem impedir o efeito dela. Apenas cartas muito específicas que anulam habilidades funcionam.",
+        isDoubleFaced: false
+      },
+      {
+        id: "riverglide-pathway",
+        name: "Riverglide Pathway // Lavaglide Pathway",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Riverglide+Pathway&format=image&face=front",
+        imageBack: "https://api.scryfall.com/cards/named?exact=Riverglide+Pathway&format=image&face=back",
+        typeFront: "Terreno",
+        typeBack: "Terreno",
+        translationFront: "{T}: Adicione {U}.",
+        translationBack: "{T}: Adicione {R}.",
+        explanationFront: "Terrenos 'Pathway' são excelentes porque sempre entram desvirados e não causam dano. Eles corrigem sua base de mana perfeitamente te dando a escolha direta de cor.",
+        explanationBack: "Você precisa declarar mentalmente a cor que falta no instante que o puxa da mão.",
+        exampleFront: "O seu jogo inicial puxou mágicas azuis pesadas? Baixe o terreno da mão virado para o lado Riverglide e tenha sua Ilha de emergência.",
+        exampleBack: "Falta mana vermelha para acionar o Daretti ou Goblin Welder? Jogue-o como Lavaglide Pathway e resolva a curva de mana.",
+        notesFront: "Ao baixar o terreno de um dos lados, ele fica assim pelo restante da partida. Não é possível 'virar a carta' e inverter o lado no meio do jogo. Se precisar contornar a API, lembre-se da nossa solução de imagens locais!",
+        isDoubleFaced: true
+      },
+      {
+        id: "ferrous-lake",
+        name: "Ferrous Lake",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Ferrous+Lake&format=image",
+        typeFront: "Terreno",
+        translationFront: "{T}: Adicione {U} ou {R}.",
+        explanationFront: "Parte essencial da sua base de mana, garantindo acesso rápido e eficiente às duas cores do seu baralho sem atrasar o seu plano de jogo inicial.",
+        exampleFront: "Sua mão inicial tem peças vermelhas e azuis. Descer este terreno garante que você não fique 'zicado' de cor para os turnos de desenvolvimento.",
+        notesFront: "Se esta for uma carta com nome alternativo (reskin) da série Marvel, ela manterá todas as regras e tipos do terreno original no qual foi baseada.",
+        isDoubleFaced: false
+      },
+      {
+        id: "archway-of-innovation",
+        name: "Archway of Innovation",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Archway+of+Innovation&format=image",
+        typeFront: "Terreno",
+        translationFront: "{T}: Adicione mana correspondente à identidade Izzet. (Possui habilidades utilitárias focadas em mágicas ou artefatos).",
+        explanationFront: "Um terreno utilitário temático. Além de cumprir seu papel de gerar recursos para o turno, terrenos que trazem utilidade extra evitam que você perca turnos ('floods') quando não tem mágicas na mão.",
+        exampleFront: "No final do turno (late-game), quando você tem mana sobrando, terrenos utilitários podem ser ativados para gerar vantagens táticas ou apoiar seus artefatos.",
+        notesFront: "Considere-o como uma peça flexível que ocupa espaço de terreno, mas entrega valor de feitiço quando necessário.",
+        isDoubleFaced: false
+      },
+      {
+        id: "thundering-falls",
+        name: "Thundering Falls",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Thundering+Falls&format=image",
+        typeFront: "Terreno — Ilha Montanha",
+        translationFront: "Thundering Falls entra no campo de batalha virado.\nQuando entrar no campo de batalha, vigie 1. (Olhe o card do topo do seu grimório. Você pode colocar aquele card no seu cemitério.)\n{T}: Adicione {U} ou {R}.",
+        explanationFront: "O 'Surveil Land' Izzet. Por ter os tipos básicos (Ilha e Montanha), pode ser buscado no deck por qualquer 'Fetch Land'. Vigiar 1 quando entra ajuda a jogar fora cartas inúteis ou jogar um artefato no cemitério de propósito para o Goblin Welder.",
+        exampleFront: "No turno 1, você desce a Thundering Falls. Olha o topo e vê um terreno que não precisa. Joga pro cemitério. No turno 2, você comprará uma mágica útil em vez de 'zicar'.",
+        notesFront: "Vigiar (Surveil) é melhor que Vidência (Scry) no seu deck, pois alimentar o cemitério é um recurso valioso para o Iron Man e a Emry.",
+        isDoubleFaced: false
+      },
+      {
+        id: "urzas-saga",
+        name: "Urza's Saga",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Urza's+Saga&format=image",
+        typeFront: "Terreno Encantamento — Saga de Urza",
+        translationFront: "I — A Saga ganha '{T}: Adicione {C}'.\nII — A Saga ganha '{2}, {T}: Crie uma ficha de criatura Construto 0/0 que recebe +1/+1 para cada artefato que você controla.'\nIII — Procure em seu grimório um card de artefato com custo de mana {0} ou {1}, coloque-o no campo e sacrifique a Saga.",
+        explanationFront: "A carta de terreno mais poderosa já impressa para decks de artefato. Ela gera mana, cria um exército de robôs gigantes, e no capítulo final vira um tutor irrespondível que põe uma peça de combo direto na mesa.",
+        exampleFront: "Turno 2: Faz um Construto gigante. Turno 3: A saga estoura e você busca direto pro campo o 'Sensei's Divining Top', 'Sol Ring' ou a 'Mox Opal', ajeitando seu jogo pra sempre.",
+        notesFront: "A busca do capítulo III deve ser por um artefato com custo EXATO de 0 ou 1 genérico. Artefatos de custo X ou que custam 1 mana colorida ({U} ou {R}) não podem ser buscados.",
+        isDoubleFaced: false
+      },
+      {
+        id: "buried-ruin",
+        name: "Buried Ruin",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Buried+Ruin&format=image",
+        typeFront: "Terreno",
+        translationFront: "{T}: Adicione {C}.\n{2}, {T}, Sacrifique Buried Ruin: Devolva o card de artefato alvo do seu cemitério para a sua mão.",
+        explanationFront: "Um seguro de vida terrestre. Funciona como rampa incolor no começo do jogo, mas, se alguém destruir sua melhor pedra ou bomba, você o sacrifica e recupera o artefato perdido.",
+        exampleFront: "Seu 'Portal to Phyrexia' foi alvo de um Vandalblast. Você vira a Buried Ruin, paga 2, sacrifica o terreno e puxa o Portal de volta para a mão.",
+        notesFront: "O terreno vai para o cemitério. Como ele sacrifica a si próprio, não conta como um artefato sacrificado para habilidades secundárias do deck.",
+        isDoubleFaced: false
+      },
+      {
+        id: "fiery-islet",
+        name: "Fiery Islet",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Fiery+Islet&format=image",
+        typeFront: "Terreno",
+        translationFront: "{T}, Pague 1 ponto de vida: Adicione {U} ou {R}.\n{1}, {T}, Sacrifique Fiery Islet: Compre um card.",
+        explanationFront: "Um 'Horizon Land'. A principal vantagem é que ele sempre entra desvirado gerando mana colorida no turno 1. Quando o jogo avança e você tem mana de sobra, você o tritura para comprar uma carta extra.",
+        exampleFront: "Turno 8, sua mão está vazia e você precisa de repostas. Você vira 1 mana, sacrifica o Fiery Islet e tenta a sorte comprando o topo do grimório.",
+        notesFront: "Dá dano em você toda vez que gera mana, mas no Commander (40 de vida) isso é quase imperceptível perto da velocidade que ele fornece.",
+        isDoubleFaced: false
+      },
+      {
+        id: "academy-ruins",
+        name: "Academy Ruins",
+        imageFront: "imagens_flipCards/AcademyRuins.webp",
+        typeFront: "Terreno Lendário",
+        translationFront: "{T}: Adicione {C}.\n{1}{U}, {T}: Coloque o card de artefato alvo do seu cemitério no topo do seu grimório.",
+        explanationFront: "O terror dos oponentes. Impede permanentemente que seus artefatos chave fiquem mortos no cemitério. Usado em conjunto com compras ou o 'Mystic Forge', é recursão infinita.",
+        exampleFront: "Oponente destrói sua 'Ensnaring Bridge'. No final do turno dele, você paga {1}{U} e põe ela no topo do deck. No seu turno, você a compra de volta e conjura novamente.",
+        notesFront: "Por ser terreno lendário, você só pode ter um. Colocar no topo do grimório protege a peça contra efeitos que exilam os cemitérios de surpresa (como 'Bojuka Bog').",
+        isDoubleFaced: false
+      },
+      {
+        id: "silverbluff-bridge",
+        name: "Silverbluff Bridge",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Silverbluff+Bridge&format=image",
+        typeFront: "Terreno Artefato",
+        translationFront: "Silverbluff Bridge entra no campo de batalha virado.\nIndestrutível.\n{T}: Adicione {U} ou {R}.",
+        explanationFront: "Sua versão aprimorada da Darksteel Citadel, pois gera mana colorida. Conta passivamente como Artefato na mesa para a sua 'Maestria com Metais' e para os descontos de 'Afinidade'.",
+        exampleFront: "Mesmo entrando virada, ela aumenta a sua contagem de artefatos. Ao lado da 'Mox Opal', já representa 2 dos 3 artefatos necessários para ativá-la.",
+        notesFront: "É indestrutível e não sofre com limpezas globais de artefato. Pode ser sacrificada tranquilamente pelas habilidades do Iron Man.",
+        isDoubleFaced: false
+      },
+      {
+        id: "izzet-boilerworks",
+        name: "Izzet Boilerworks",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Izzet+Boilerworks&format=image",
+        typeFront: "Terreno",
+        translationFront: "Entra no campo de batalha virado.\nQuando entrar, devolva um terreno que você controla para a mão de seu dono.\n{T}: Adicione {U}{R}.",
+        explanationFront: "Um 'Bounce Land' que burla a matemática. Apesar de atrasar voltando um terreno para a mão, ele sozinho passa a gerar duas manas por turno. Se você tiver como desvirá-lo (com Unwinding Clock), gera um absurdo de recursos.",
+        exampleFront: "Você desce ele e escolhe voltar o 'Riverglide Pathway' para a mão. No próximo turno, você desce o Pathway de novo do lado oposto que precisar, consertando sua cor, e o Boilerworks já gera 2 manas.",
+        notesFront: "Cuidado: se for o único terreno da sua mesa no Turno 1, você será obrigado a voltar ele próprio para a mão.",
+        isDoubleFaced: false
+      },
+      {
+        id: "temple-of-epiphany",
+        name: "Temple of Epiphany",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Temple+of+Epiphany&format=image",
+        typeFront: "Terreno",
+        translationFront: "Entra no campo de batalha virado.\nQuando entrar, use vidência 1. (Olhe o card do topo do seu grimório. Você pode colocá-lo no fundo do grimório.)\n{T}: Adicione {U} ou {R}.",
+        explanationFront: "Um fixador de início de jogo calmo e calculista. Arrumar o topo antes de comprar é excelente para evitar excesso de terrenos ('flood') ou a falta deles.",
+        exampleFront: "Turno 1. Desce o Templo. Você olha o topo e vê um 'Blightsteel Colossus' que você não terá mana pra fazer agora. Você o empurra para o fundo do deck e compra uma carta mais barata no próximo turno.",
+        notesFront: "O scry (vidência) permite esconder cartas ruins, diferentemente do Surveil (vigiar), que joga para o cemitério.",
+        isDoubleFaced: false
+      },
+      {
+        id: "exotic-orchard",
+        name: "Exotic Orchard",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Exotic+Orchard&format=image",
+        typeFront: "Terreno",
+        translationFront: "{T}: Adicione um mana de qualquer cor que um terreno controlado por um oponente poderia produzir.",
+        explanationFront: "Em mesas de Commander com 4 jogadores, a probabilidade de pelo menos um oponente usar Azul ou Vermelho beira os 100%. Este terreno funciona quase sempre como uma 'Dual Land' perfeita e sem desvantagens.",
+        exampleFront: "Turno 1, o oponente desceu uma Ilha. Você desce o Exotic Orchard e já o vira para gerar mana Azul para um 'Ponder' ou 'Sol Ring'.",
+        notesFront: "Se, por um milagre estatístico, nenhum oponente usar Azul ou Vermelho, este terreno produzirá mana de cores inúteis para a sua identidade e você só poderá usá-la para pagar custos genéricos incolores.",
+        isDoubleFaced: false
+      },
+      {
+        id: "scalding-tarn",
+        name: "Scalding Tarn",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Scalding+Tarn&format=image",
+        typeFront: "Terreno",
+        translationFront: "{T}, Pague 1 ponto de vida, Sacrifique Scalding Tarn: Procure em seu grimório um card de Ilha ou Montanha, coloque-o no campo de batalha e depois embaralhe.",
+        explanationFront: "A melhor 'Fetch Land' para o seu deck. Ela afina o seu baralho tirando terrenos indesejados, enche o cemitério e, o mais importante, busca terrenos duplos que tenham o tipo 'Ilha' ou 'Montanha'.",
+        exampleFront: "Você sacrifica o Tarn e, em vez de buscar um terreno básico, busca a 'Steam Vents' ou a 'Thundering Falls' (que possuem os tipos básicos na carta), consertando sua base de mana instantaneamente.",
+        notesFront: "A busca não se restringe a terrenos básicos. Qualquer terreno não-básico que tenha a palavra 'Island' ou 'Mountain' na linha de tipo (abaixo da arte) pode ser buscado.",
+        isDoubleFaced: false
+      },
+      {
+        id: "great-furnace",
+        name: "Great Furnace",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Great+Furnace&format=image",
+        typeFront: "Terreno Artefato",
+        translationFront: "{T}: Adicione {R}.",
+        explanationFront: "Um terreno essencial. Por também ser um artefato, ele liga sua 'Maestria com Metais' de graça, barateia feitiços com 'Afinidade' (como Thoughtcast) e serve de comida para o Comandante em emergências.",
+        exampleFront: "Você desce a Great Furnace. O Iron Man ataca e você precisa sacrificar um artefato, mas quer manter seus equipamentos. Você sacrifica este terreno para buscar um artefato de custo 1 no deck.",
+        notesFront: "Por ser um artefato, ele é vulnerável a remoções como 'Vandalblast' ou 'Bane of Progress'. Fique atento a limpezas globais.",
+        isDoubleFaced: false
+      },
+      {
+        id: "frostboil-snarl",
+        name: "Frostboil Snarl",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Frostboil+Snarl&format=image",
+        typeFront: "Terreno",
+        translationFront: "Entra no campo de batalha virado, a menos que você revele um card de Ilha ou Montanha da sua mão.\n{T}: Adicione {U} ou {R}.",
+        explanationFront: "Um 'Reveal Land'. Ótimo para os primeiros turnos onde sua mão ainda está cheia de terrenos básicos ou duplos, permitindo que ele entre desvirado e acelere seu jogo.",
+        exampleFront: "Turno 1, você revela a 'Steam Vents' da sua mão. O Snarl entra desvirado e pronto para uso imediato.",
+        notesFront: "O card revelado permanece na sua mão. Se você comprar este terreno no final do jogo (quando sua mão já está vazia), ele inevitavelmente entrará virado.",
+        isDoubleFaced: false
+      },
+      {
+        id: "seat-of-the-synod",
+        name: "Seat of the Synod",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Seat+of+the+Synod&format=image",
+        typeFront: "Terreno Artefato",
+        translationFront: "{T}: Adicione {U}.",
+        explanationFront: "O par azul da Great Furnace. Além de fixar a mana azul para suas anulações, conta como peça de artefato para todas as trapaças e sinergias do seu deck Izzet.",
+        exampleFront: "No turno 1, você joga Seat of the Synod e 'Sol Ring'. Você já tem 2 artefatos na mesa. Se baixar uma Mox Opal em seguida, a condição dela (3 artefatos) já está ativa no primeiro turno.",
+        notesFront: "Assim como a Furnace, evite jogá-lo se desconfiar que o oponente da próxima vez vai soltar um destruidor global de artefatos.",
+        isDoubleFaced: false
+      },
+      {
+        id: "reliquary-tower",
+        name: "Reliquary Tower",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Reliquary+Tower&format=image",
+        typeFront: "Terreno",
+        translationFront: "Você não tem um limite máximo de tamanho de mão.\n{T}: Adicione {C}.",
+        explanationFront: "O terreno de suporte mais adorado em decks de controle/compra. Garante que os lucros massivos do seu 'Rhystic Study' ou 'Mystic Remora' nunca precisem ir para o lixo no fim do turno.",
+        exampleFront: "Você joga um 'Thoughtcast' e depois ativa o 'Sensei's Divining Top', terminando o turno com 10 cartas na mão. Graças à Torre, você não descarta nada na etapa de limpeza.",
+        notesFront: "O efeito é estático e passivo. Se o terreno for destruído antes da sua Etapa de Limpeza, a regra normal de descartar até ter 7 cartas volta a valer.",
+        isDoubleFaced: false
+      },
+      {
+        id: "inventors-fair",
+        name: "Inventors' Fair",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Inventors%27+Fair&format=image",
+        typeFront: "Terreno",
+        translationFront: "No início da sua manutenção, se você controlar três ou mais artefatos, ganhe 1 ponto de vida.\n{T}: Adicione {C}.\n{4}, {T}, Sacrifique: Procure em seu grimório um card de artefato, coloque-o na sua mão e embaralhe. Ative apenas se controlar 3+ artefatos.",
+        explanationFront: "Um terreno utilitário que beira o absurdo no seu deck. Ganhar vida todo turno ajuda a pagar o 'The One Ring', e ele funciona como um 'Tutor' impossível de anular no final do jogo.",
+        exampleFront: "Sua mesa está travada, mas você tem mana sobrando. No final do turno inimigo, você sacrifica a Feira, busca o 'Blightsteel Colossus' ou o 'Cyberdrive Awakener' e prepara o letal no seu próprio turno.",
+        notesFront: "A busca vai direto para a MÃO. Como é uma habilidade de terreno, o oponente não pode usar 'Counterspell' para impedir você de buscar a carta.",
+        isDoubleFaced: false
+      },
+      {
+        id: "cascade-bluffs",
+        name: "Cascade Bluffs",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Cascade+Bluffs&format=image",
+        typeFront: "Terreno",
+        translationFront: "{T}: Adicione {C}.\n{U/R}, {T}: Adicione {U}{U}, {U}{R} ou {R}{R}.",
+        explanationFront: "Um 'Filter Land' de altíssima eficiência. Converte a cor de manas soltas ou terrenos básicos isolados em custos duplos pesados que o seu deck pode exigir no final do jogo.",
+        exampleFront: "Você controla esse terreno, uma Ilha e uma Montanha. Com o Cascade Bluffs, você pode transformar a mana dessa única Ilha em {R}{R} para conjurar um feitiço vermelho pesado, ou em {U}{U} para usar 'Mana Drain'.",
+        notesFront: "Preste atenção: você PRECISA ter pelo menos 1 mana Azul ou Vermelha sobrando de outra fonte para ativar a habilidade de filtragem. Ele não arruma cores sozinho do nada.",
+        isDoubleFaced: false
+      },
+      {
+        id: "stormcarved-coast",
+        name: "Stormcarved Coast",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Stormcarved+Coast&format=image",
+        typeFront: "Terreno",
+        translationFront: "Entra no campo de batalha virado, a menos que você controle dois ou mais outros terrenos.\n{T}: Adicione {U} ou {R}.",
+        explanationFront: "Conhecido como 'Slow Land'. Ideal para o formato Commander onde o jogo costuma se estender. A partir do turno 3 em diante, este terreno funcionará perfeitamente como uma Dual Land desvirada sem custos de vida.",
+        exampleFront: "No turno 3, você já baixou uma Ilha e uma Montanha nos turnos anteriores. Ao descer a Stormcarved Coast, ela conta os seus outros dois terrenos e entra perfeitamente desvirada.",
+        notesFront: "Se ele for o seu primeiro ou segundo terreno baixado na partida, ele entrará virado.",
+        isDoubleFaced: false
+      },
+      {
+        id: "steam-vents",
+        name: "Steam Vents",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Steam+Vents&format=image",
+        typeFront: "Terreno — Ilha Montanha",
+        translationFront: "Conforme Steam Vents entra no campo de batalha, você pode pagar 2 pontos de vida. Se não o fizer, ele entrará virado.\n{T}: Adicione {U} ou {R}.",
+        explanationFront: "A rainha da sua base de mana (Shock Land). Por ter os tipos oficiais de Ilha e Montanha na carta, ela liga os seus outros terrenos dependentes e pode ser buscada do baralho por qualquer Fetch Land.",
+        exampleFront: "Você sacrifica 'Scalding Tarn', busca a 'Steam Vents' no meio do baralho. Se você precisar da mana urgente, paga 2 de vida e ela entra pronta. Se não, deixa ela entrar virada de graça.",
+        notesFront: "O pagamento de vida não usa a pilha (é 'conforme entra'). Nenhum oponente pode responder ou dar dano em resposta à sua escolha.",
+        isDoubleFaced: false
+      },
+      {
+        id: "shivan-reef",
+        name: "Shivan Reef",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Shivan+Reef&format=image",
+        typeFront: "Terreno",
+        translationFront: "{T}: Adicione {C}.\n{T}: Adicione {U} ou {R}. Shivan Reef causa 1 ponto de dano a você.",
+        explanationFront: "Um clássico 'Pain Land'. Oferece flexibilidade total e incondicional gerando ambas as cores desde o primeiro turno do jogo, sob a pequena taxa de 1 ponto de vida apenas quando gerar mana colorida.",
+        exampleFront: "Você o usa gerando dano em si mesmo nos primeiros 3 turnos para estabilizar a mesa de artefatos. No final do jogo, com a mesa posta, você passa a usar apenas a primeira habilidade incolor, poupando seus pontos de vida.",
+        notesFront: "Diferente de 'pagar vida' (como na Steam Vents), o Shivan Reef CAUSA DANO em você. Efeitos que aumentam ou previnem dano interagem com este terreno.",
+        isDoubleFaced: false
+      },
+      {
+        id: "sulfur-falls",
+        name: "Sulfur Falls",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Sulfur+Falls&format=image",
+        typeFront: "Terreno",
+        translationFront: "Entra no campo de batalha virado a menos que você controle uma Ilha ou uma Montanha.\n{T}: Adicione {U} ou {R}.",
+        explanationFront: "O famoso 'Check Land'. Em um deck bem construído, você quase sempre terá uma Ilha, Montanha ou um terreno duplo (como Steam Vents) na mesa antes dele, fazendo-o entrar pronto pra ação.",
+        exampleFront: "Turno 2. Você já tem uma 'Steam Vents' no campo. Ao descer a Sulfur Falls, ela verifica a presença do tipo Ilha/Montanha na Vents e entra totalmente desvirada.",
+        notesFront: "Fique atento: terrenos puramente utilitários ou que não trazem o tipo escrito na barra central da carta (como Command Tower ou Shivan Reef) NÃO fazem a Sulfur Falls entrar desvirada.",
+        isDoubleFaced: false
+      },
+      {
+        id: "command-tower",
+        name: "Command Tower",
+        imageFront: "https://api.scryfall.com/cards/named?exact=Command+Tower&format=image",
+        typeFront: "Terreno",
+        translationFront: "{T}: Adicione um mana de qualquer cor da identidade de cor do seu comandante.",
+        explanationFront: "O terreno sagrado do formato Commander. Entra desvirado, sem nenhum custo, pegadinha ou desvantagem, gerando perfeitamente a exata combinação de cores que o Iron Man exige (Azul ou Vermelho).",
+        exampleFront: "Turno 1, baixe a Torre, vire e jogue 'Sol Ring'. Simples, eficiente e obrigatório em 100% dos baralhos do formato.",
+        notesFront: "Se, por alguma intervenção cósmica bizarra ou mágica de roubo, um oponente tomar o controle deste terreno num deck Incolor, ele não produzirá nenhuma mana.",
+        isDoubleFaced: false
+      }
+    ];
+
+    // ==========================================
+    // LÓGICA DO JAVASCRIPT
+    // ==========================================
+    const grid = document.getElementById('cards-grid');
+    const modal = document.getElementById('modal');
+    
+    // Variáveis de controle de estado
+    let currentCard = null;
+    let isFlipped = false;
+
+    // 1. Injeta os cards na tela inicial
+    function renderGrid() {
+      grid.innerHTML = cardsDatabase.map((card, index) => `
+        <div onclick="openModal(${index})" class="group relative cursor-pointer rounded-xl transition-all duration-300 hover:scale-105 hover:z-10 hover:shadow-[0_0_20px_rgba(239,68,68,0.5)] bg-slate-900 border border-slate-800">
+          <img src="${card.imageFront}" alt="${card.name}" class="w-full h-auto rounded-xl shadow-lg" loading="lazy">
+          <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center backdrop-blur-sm">
+            <span class="text-cyan-400 font-bold uppercase tracking-wider text-sm border border-cyan-400 px-3 py-1 rounded">Acessar Dados</span>
+          </div>
+          ${card.isDoubleFaced ? `
+            <div class="absolute top-2 right-2 bg-slate-900/90 rounded-full p-1 border border-cyan-500 shadow-[0_0_10px_rgba(34,211,238,0.5)]">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </div>
+          ` : ''}
+        </div>
+      `).join('');
+    }
+
+    // 2. Abre o Modal e atualiza as informações
+    function openModal(index) {
+      currentCard = cardsDatabase[index];
+      isFlipped = false; // Começa sempre na frente
+      
+      // Trava o scroll do fundo
+      document.body.classList.add('no-scroll');
+      modal.classList.remove('hidden');
+      
+      updateModalUI();
+    }
+
+    // 3. Fecha o Modal
+    function closeModal() {
+      document.body.classList.remove('no-scroll');
+      modal.classList.add('hidden');
+      currentCard = null;
+    }
+
+    // 4. Virar a carta dupla-face
+    function toggleFlip() {
+      if (!currentCard.isDoubleFaced) return;
+      isFlipped = !isFlipped;
+      updateModalUI();
+    }
+
+// 5. Atualiza os textos e a imagem no Modal
+    function updateModalUI() {
+      // Elementos de Imagem e Flip
+      const innerFlip = document.getElementById('modal-flip-inner');
+      const imgFront = document.getElementById('modal-img-front');
+      const imgBack = document.getElementById('modal-img-back');
+      const flipBtnContainer = document.getElementById('flip-button-container');
+      const flipBtnText = document.getElementById('flip-btn-text');
+      
+      // Controla a imagem frontal
+      imgFront.src = currentCard.imageFront;
+      
+      // Lógica de Double-Faced
+      if (currentCard.isDoubleFaced) {
+        // Se a carta tiver imageBack definida explicitamente, usa ela. 
+        // Senão, usa o parâmetro da Scryfall para buscar o verso (face 2)
+        imgBack.src = currentCard.imageBack || `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(currentCard.name.split(" // ")[0])}&format=image&version=normal&face=back`;
+        
+        imgBack.classList.remove('hidden');
+        flipBtnContainer.classList.remove('hidden');
+        
+        if (isFlipped) {
+          innerFlip.classList.add('is-flipped');
+          flipBtnText.innerText = "Ver Face Frontal";
+        } else {
+          innerFlip.classList.remove('is-flipped');
+          flipBtnText.innerText = "Virar Carta";
+        }
+      } else {
+        imgBack.classList.add('hidden');
+        flipBtnContainer.classList.add('hidden');
+        innerFlip.classList.remove('is-flipped');
+      }
+
+      // Controla os textos dependendo do lado (Frente ou Verso)
+      const isVerso = currentCard.isDoubleFaced && isFlipped;
+
+      // Nomes e Tipos
+      const nameArray = currentCard.name.split(" // ");
+      document.getElementById('modal-title').innerText = isVerso ? (nameArray[1] || nameArray[0]) : nameArray[0];
+      document.getElementById('modal-type').innerText = isVerso ? currentCard.typeBack : currentCard.typeFront;
+
+      // Textos Táticos
+      document.getElementById('modal-translation').innerText = isVerso ? currentCard.translationBack : currentCard.translationFront;
+      document.getElementById('modal-explanation').innerText = isVerso ? currentCard.explanationBack : currentCard.explanationFront;
+      document.getElementById('modal-example').innerText = isVerso ? (currentCard.exampleBack || currentCard.exampleFront) : currentCard.exampleFront;
+      document.getElementById('modal-notes').innerText = isVerso ? (currentCard.notesBack || currentCard.notesFront) : currentCard.notesFront;
+    }
+
+    // Inicializa a Grid ao carregar a página
+    renderGrid();
+  </script>
+</body>
+</html>
