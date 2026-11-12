@@ -1339,7 +1339,7 @@
 
     ];
 
-    const gontiCardsArray = [
+    const gontiCards = [
       {
 
       }
@@ -1363,7 +1363,7 @@
         commander: "Gonti, Canny Acquisitor",
         colors: "Sultai (Preto/Verde/Azul)",
         coverImage: "imagens_flipCards/COMANDER_GontiCannyAcquisitor.jpg", // Capa do deck
-        cards: gontiCardsArray // Puxa o array inteiro que você colou ali em cima
+        cards: gontiCards // Puxa o array inteiro que você colou ali em cima
       }
       
     ];
@@ -1456,7 +1456,7 @@
       // IMPORTANTE: Agora passamos o card.id na função openModal em vez do index
       cardsGrid.innerHTML = filteredCards.map(card => `
         <div onclick="openModal('${card.id}')" class="group relative cursor-pointer rounded-xl transition-all duration-300 hover:scale-105 hover:z-10 hover:shadow-[0_0_20px_rgba(239,68,68,0.5)] bg-slate-900 border border-slate-800">
-          <img src="${card.imageFront}" alt="${card.name}" class="w-full h-auto rounded-xl shadow-lg" loading="lazy">
+          <img src="${card.imageFront}" alt="${card.name}" class="w-full aspect-[5/7] object-cover rounded-xl shadow-lg bg-slate-800" loading="lazy">
           <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center backdrop-blur-sm">
             <span class="text-cyan-400 font-bold uppercase tracking-wider text-sm border border-cyan-400 px-3 py-1 rounded">Acessar Dados</span>
           </div>
