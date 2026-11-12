@@ -2445,152 +2445,6 @@
 
     const milesCards = [
       {
-        id: "miles-morales-ultimate",
-        name: "Miles Morales // Ultimate Spider-Man",
-        imageFront: "https://api.scryfall.com/cards/named?exact=Miles+Morales&format=image",
-        imageBack: "https://api.scryfall.com/cards/named?exact=Miles+Morales&format=image&face=back",
-        typeFront: "Criatura Lendária — Humano Cidadão Herói",
-        typeBack: "Criatura Lendária — Humano Aranha Herói",
-        translationFront: "Quando Miles Morales entrar, coloque um marcador +1/+1 em até duas criaturas alvo. {W/U}{B/R}{G}: Transforme Miles Morales.",
-        translationBack: "Iniciativa, ímpeto. Camuflagem. Toda vez que você atacar, dobre o número de cada tipo de marcador em cada Aranha e criatura lendária que você controla.",
-        explanationFront: "Transformar significa pagar o custo de mana exigido e virar a carta fisicamente para o outro lado, revelando uma criatura mais forte. A face da frente serve para preparar a sua mesa distribuindo marcadores enquanto o jogo está no começo.",
-        explanationBack: "A Iniciativa faz ele causar dano antes dos bloqueadores. Camuflagem (Ward) é um escudo: se o oponente tentar lançar um feitiço nele, terá que pagar uma taxa extra, senão o feitiço é anulado. Ele dobrará o poder de toda a sua equipe quando atacar.",
-        exampleFront: "Desça o Miles cedo, buffe ele mesmo e outra aranha. Quando tiver mana, transforme-o e ataque para explodir os atributos da mesa inteira.",
-        notesFront: "O Dano de Comandante (21 para vencer) considera o dano das duas faces somado.",
-        isDoubleFaced: true
-      },
-      {
-        id: "arcane-signet",
-        name: "Arcane Signet",
-        imageFront: "https://api.scryfall.com/cards/named?exact=Arcane+Signet&format=image",
-        typeFront: "Artefato",
-        translationFront: "{T}: Adicione um mana de qualquer cor da identidade de cor do seu comandante.",
-        explanationFront: "Pedras de mana (Mana Rocks) são artefatos fundamentais no Commander que geram mana extra todo turno. No deck do Miles, ela sempre gerará mana Branca, Vermelha ou Verde, ajudando a acelerar e estabilizar as 3 cores logo no início do jogo.",
-        exampleFront: "Você a joga no turno 2. No mesmo turno, já a vira para gerar mana Verde e conjurar uma mágica de 1 mana, acelerando muito sua mesa.",
-        notesFront: "Não possui identidade de cor própria, mas pega emprestado as cores Naya do Miles Morales.",
-        isDoubleFaced: false
-      },
-      {
-        id: "swords-to-plowshares",
-        name: "Swords to Plowshares",
-        imageFront: "https://api.scryfall.com/cards/named?exact=Swords+to+Plowshares&format=image",
-        typeFront: "Mágica Instantânea",
-        translationFront: "Exile a criatura alvo. Seu controlador ganha pontos de vida iguais ao poder daquela criatura.",
-        explanationFront: "Uma Mágica Instantânea pode ser jogada a qualquer momento, inclusive no turno do oponente. O termo Exilar bane a carta do jogo permanentemente (ela não vai para o cemitério). Por apenas 1 mana, você remove a maior ameaça inimiga.",
-        exampleFront: "Oponente ataca com um monstro 10/10 indestrutível. Você vira {W}, conjura Swords to Plowshares. O monstro é exilado para sempre, e dar 10 de vida pro inimigo não é nada perto de salvar a sua mesa.",
-        notesFront: "Contorna perfeitamente efeitos de 'Indestrutível' e 'Regenerar', já que a criatura é exilada e não destruída.",
-        isDoubleFaced: false
-      },
-      {
-        id: "path-to-exile",
-        name: "Path to Exile",
-        imageFront: "https://api.scryfall.com/cards/named?exact=Path+to+Exile&format=image",
-        typeFront: "Mágica Instantânea",
-        translationFront: "Exile a criatura alvo. Seu controlador pode procurar em seu grimório um card de terreno básico, colocá-lo no campo de batalha virado e depois embaralhar.",
-        explanationFront: "Outra remoção instantânea brutal. Excelente para exilar deuses ou criaturas que não podem ser destruídas normalmente. O preço cobrado aqui é permitir que o oponente busque um terreno básico, mas eliminar o monstro principal dele vale a pena.",
-        exampleFront: "Alguém vai fechar um combo de vitória com uma criatura específica. Você a exila com Path to Exile. Ele ganha um terreno extra, mas perde a chance de vencer o jogo.",
-        notesFront: "Em casos de extrema emergência onde você precisa muito de mana, você pode dar alvo numa ficha de aranha sua para exilá-la e buscar um terreno no seu próprio baralho.",
-        isDoubleFaced: false
-      },
-      {
-        id: "cultivate",
-        name: "Cultivate",
-        imageFront: "https://api.scryfall.com/cards/named?exact=Cultivate&format=image",
-        typeFront: "Feitiço",
-        translationFront: "Procure em seu grimório até dois cards de terreno básico, revele-os e coloque um no campo de batalha virado e o outro na sua mão. Depois, embaralhe.",
-        explanationFront: "Feitiços só podem ser jogados no seu próprio turno. Acelerar a quantidade de terrenos na mesa é chamado de Ramp. Este feitiço te dá um terreno extra direto no campo e ainda garante o do próximo turno na sua mão.",
-        exampleFront: "Você tem 3 manas no turno 3. Conjura Cultivate, busca uma Montanha pro campo e uma Planície pra mão. No turno 4, você já tem acesso garantido a 5 manas no total.",
-        notesFront: "Só pode buscar terrenos com o supertipo 'Básico' (Planície, Ilha, Pântano, Montanha, Floresta).",
-        isDoubleFaced: false
-      },
-      {
-        id: "farseek",
-        name: "Farseek",
-        imageFront: "https://api.scryfall.com/cards/named?exact=Farseek&format=image",
-        typeFront: "Feitiço",
-        translationFront: "Procure em seu grimório um card de Planície, Ilha, Pântano ou Montanha, coloque-o no campo de batalha virado e depois embaralhe.",
-        explanationFront: "Outro feitiço de aceleração. O grande truque do Farseek é que ele não exige que o terreno seja básico. Ele pode buscar terrenos duplos especiais do seu deck (como Sacred Foundry ou Stomping Ground) que tenham os tipos Montanha ou Planície.",
-        exampleFront: "Turno 2 você conjura Farseek. Busca a 'Sacred Foundry' (que tem os tipos Montanha e Planície). No turno 3, suas cores já estão todas estabilizadas.",
-        notesFront: "Ele não pode buscar terrenos que tenham apenas o tipo 'Floresta', mas buscar as outras duas cores do deck é exatamente o que você precisará.",
-        isDoubleFaced: false
-      },
-      {
-        id: "heroic-intervention",
-        name: "Heroic Intervention",
-        imageFront: "https://api.scryfall.com/cards/named?exact=Heroic+Intervention&format=image",
-        typeFront: "Mágica Instantânea",
-        translationFront: "As permanentes que você controla ganham resistência à magia e indestrutível até o final do turno.",
-        explanationFront: "Dar 'Indestrutível' significa que as cartas ignoram feitiços que dizem 'Destrua' e não morrem por excesso de dano. Resistência à Magia impede que oponentes deem alvo nelas. Juntas, formam o escudo supremo do jogo.",
-        exampleFront: "Oponente conjura 'Wrath of God' para destruir todas as criaturas da mesa. Em resposta, você joga Heroic Intervention. As criaturas dele morrem, mas as suas sobrevivem ilesas.",
-        notesFront: "Isso protege TODAS as suas permanentes, incluindo seus terrenos e encantamentos, não apenas as criaturas.",
-        isDoubleFaced: false
-      },
-      {
-        id: "rhythm-of-the-wild",
-        name: "Rhythm of the Wild",
-        imageFront: "https://api.scryfall.com/cards/named?exact=Rhythm+of+the+Wild&format=image",
-        typeFront: "Encantamento",
-        translationFront: "As mágicas de criatura que você controla não podem ser anuladas. As criaturas que você controla que não sejam fichas têm Tumulto.",
-        explanationFront: "O efeito Tumulto permite escolher na hora que a criatura entra: ou ela recebe um marcador +1/+1 para ficar forte, ou ganha Ímpeto para atacar no mesmo turno. A restrição de 'não podem ser anuladas' é um pesadelo para oponentes de Azul.",
-        exampleFront: "Você desce um atacante pesado com isso na mesa. O jogador azul não pode usar 'Counterspell'. Você escolhe Tumulto para dar Ímpeto, e a criatura já entra atacando naquele mesmo turno.",
-        notesFront: "Fichas criadas por mágicas (tokens de aranha) não ganham o efeito do Tumulto, pois não são cartas conjuradas.",
-        isDoubleFaced: false
-      },
-      {
-        id: "natures-lore",
-        name: "Nature's Lore",
-        imageFront: "https://api.scryfall.com/cards/named?exact=Nature's+Lore&format=image",
-        typeFront: "Feitiço",
-        translationFront: "Procure em seu grimório um card de Floresta, coloque aquele card no campo de batalha e depois embaralhe o seu grimório.",
-        explanationFront: "Mais um feitiço acelerador. O diferencial incrível aqui é que o terreno entra desvirado. Ou seja, ele devolve 1 mana instantaneamente para você usar em outra mágica no mesmo turno, mantendo o seu jogo muito rápido.",
-        exampleFront: "Você conjura por 2 manas. Busca um 'Temple Garden' (Floresta e Planície) e paga 2 de vida para ele entrar desvirado. Você imediatamente tem mana branca sobrando para um 'Swords to Plowshares'.",
-        notesFront: "Assim como Farseek, ele pode buscar qualquer terreno duplo que tenha o tipo 'Floresta' escrito na carta.",
-        isDoubleFaced: false
-      },
-      {
-        id: "rampant-growth",
-        name: "Rampant Growth",
-        imageFront: "https://api.scryfall.com/cards/named?exact=Rampant+Growth&format=image",
-        typeFront: "Feitiço",
-        translationFront: "Procure em seu grimório um card de terreno básico, coloque aquele card no campo de batalha virado e depois embaralhe seu grimório.",
-        explanationFront: "O feitiço de aceleração mais honesto e antigo do jogo. Ele converte 2 manas do seu turno atual em uma garantia de ter 3 manas sólidas no próximo turno, buscando exatamente o terreno básico da cor que estiver faltando.",
-        exampleFront: "Sua mão tem terrenos verdes e brancos, mas nenhuma montanha. Jogue o Rampant Growth, busque a montanha pro campo e garanta o Vermelho na sua mesa.",
-        notesFront: "Diferente de Farseek e Nature's Lore, o Rampant Growth só pode buscar terrenos puramente básicos.",
-        isDoubleFaced: false
-      }
-    ];
-   
-
-    // ==========================================
-    // 2. ARRAY DE DECKS (O COFRE)
-    // ==========================================
-    const decksDatabase = [
-      {
-        id: "iron-man-deck",
-        title: "Iron Man Artifacts",
-        commander: "Iron Man, Titan Of Inovation",
-        colors: "Izzet (Azul/Vermelho)",
-        coverImage: "imagens_flipCards/COMANDER_IronManTitanOfInnovation.jpg", // Capa do deck
-        cards: ironManCards // Puxa o array inteiro que você colou ali em cima
-      },
-      {
-        id: "gonti-deck",
-        title: "Gonti Theft",
-        commander: "Gonti, Canny Acquisitor",
-        colors: "Sultai (Preto/Verde/Azul)",
-        coverImage: "imagens_flipCards/COMANDER_GontiCannyAcquisitor.jpg", // Capa do deck
-        cards: gontiCards // Puxa o array inteiro que você colou ali em cima
-      },
-      {
-        id: "miles-deck",
-        title: "Miles Morales",
-        commander: "Miles Morales // Ultimate Spider-Man",
-        colors: "Naya (Vermelho/Verde/Branco)",
-        coverImage: "imagens_flipCards/MilesMorales_back.webp", // Capa do deck
-        cards: milesCards // Puxa o array inteiro que você colou ali em cima
-      },
-      ,
-      {
         id: "kutzil-malamet",
         name: "Kutzil, Malamet Exemplar",
         imageFront: "https://api.scryfall.com/cards/named?exact=Kutzil,+Malamet+Exemplar&format=image",
@@ -3599,9 +3453,44 @@
         notesFront: "O tipo mágico escolhido no momento de entrada não poderá mais ser alterado ou remendado pelo resto absoluto da partida.",
         isDoubleFaced: false
       }
+      
+    ];
+    
+    
+   
+
+    // ==========================================
+    // 2. ARRAY DE DECKS (O COFRE)
+    // ==========================================
+    const decksDatabase = [
+      {
+        id: "iron-man-deck",
+        title: "Iron Man Artifacts",
+        commander: "Iron Man, Titan Of Inovation",
+        colors: "Izzet (Azul/Vermelho)",
+        coverImage: "imagens_flipCards/COMANDER_IronManTitanOfInnovation.jpg", // Capa do deck
+        cards: ironManCards // Puxa o array inteiro que você colou ali em cima
+      },
+      {
+        id: "gonti-deck",
+        title: "Gonti Theft",
+        commander: "Gonti, Canny Acquisitor",
+        colors: "Sultai (Preto/Verde/Azul)",
+        coverImage: "imagens_flipCards/COMANDER_GontiCannyAcquisitor.jpg", // Capa do deck
+        cards: gontiCards // Puxa o array inteiro que você colou ali em cima
+      },
+      {
+        id: "miles-deck",
+        title: "Miles Morales",
+        commander: "Miles Morales // Ultimate Spider-Man",
+        colors: "Naya (Vermelho/Verde/Branco)",
+        coverImage: "imagens_flipCards/MilesMorales_back.webp", // Capa do deck
+        cards: milesCards // Puxa o array inteiro que você colou ali em cima
+      },
     
       
     ];
+    
 
     // ==========================================
     // LÓGICA DO JAVASCRIPT
