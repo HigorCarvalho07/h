@@ -1433,7 +1433,7 @@
       renderCardsGrid(termo);
     }
 
-    // Renderiza as cartas (agora com filtro de busca)
+   // Renderiza as cartas (agora com filtro de busca e Atraso Controlado)
     function renderCardsGrid(searchTerm = "") {
       const currentDeckCards = decksDatabase[activeDeckIndex].cards;
       const term = searchTerm.toLowerCase();
@@ -1453,10 +1453,12 @@
         return;
       }
 
-      // IMPORTANTE: Agora passamos o card.id na função openModal em vez do index
+      // 1. GERA O HTML (Note que o src virou data-src e adicionamos a classe observe-img)
       cardsGrid.innerHTML = filteredCards.map(card => `
         <div onclick="openModal('${card.id}')" class="group relative cursor-pointer rounded-xl transition-all duration-300 hover:scale-105 hover:z-10 hover:shadow-[0_0_20px_rgba(239,68,68,0.5)] bg-slate-900 border border-slate-800">
-          <img src="${card.imageFront}" alt="${card.name}" class="w-full aspect-[5/7] object-cover rounded-xl shadow-lg bg-slate-800" loading="lazy">
+          
+          <img data-src="${card.imageFront}" alt="${card.name}" class="observe-img w-full aspect-[5/7] object-cover rounded-xl shadow-lg bg-slate-800">
+          
           <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center backdrop-blur-sm">
             <span class="text-cyan-400 font-bold uppercase tracking-wider text-sm border border-cyan-400 px-3 py-1 rounded">Acessar Dados</span>
           </div>
@@ -1469,6 +1471,32 @@
           ` : ''}
         </div>
       `).join('');
+
+      // 2. MOTOR DE ATRASO (INTERSECTION OBSERVER)
+      const cardsToLoad = document.querySelectorAll('.observe-img');
+      
+      const imageObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach((entry, index) => {
+          // Se a carta entrou na tela
+          if (entry.isIntersecting) {
+            const img = entry.target;
+            
+            // Multiplicamos 150 milissegundos pela posição da carta na fila que acabou de aparecer
+            setTimeout(() => {
+              img.src = img.getAttribute('data-src');
+            }, index * 150); 
+            
+            // Para de vigiar a carta depois de mandar carregar
+            observer.unobserve(img);
+          }
+        });
+      }, {
+        // Começa a disparar as requisições 300px antes da carta aparecer na tela
+        rootMargin: "0px 0px 300px 0px" 
+      });
+
+      // Aplica o vigia em todas as cartas geradas
+      cardsToLoad.forEach(img => imageObserver.observe(img));
     }
 
     // Abre o Modal buscando a carta pelo ID, para não dar erro durante a busca
