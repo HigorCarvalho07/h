@@ -1492,26 +1492,36 @@
         </div>
       `).join('');
 
-      // 2. MOTOR DE ATRASO (INTERSECTION OBSERVER)
+      // 2. MOTOR DE ATRASO (INTERSECTION OBSERVER) COM FILA GLOBAL
       const cardsToLoad = document.querySelectorAll('.observe-img');
       
+      let currentDelay = 0; // Tempo de espera na fila
+      let resetTimer = null; // Cronômetro para zerar a fila
+
       const imageObserver = new IntersectionObserver((entries, observer) => {
-        entries.forEach((entry, index) => {
-          // Se a carta entrou na tela
+        entries.forEach((entry) => {
           if (entry.isIntersecting) {
             const img = entry.target;
             
-            // Multiplicamos 150 milissegundos pela posição da carta na fila que acabou de aparecer
+            // Aplica o tempo exato de espera desta carta na fila
             setTimeout(() => {
               img.src = img.getAttribute('data-src');
-            }, index * 150); 
+            }, currentDelay); 
             
-            // Para de vigiar a carta depois de mandar carregar
+            // Aumenta a fila em 150ms para a PRÓXIMA carta
+            currentDelay += 150; 
+            
             observer.unobserve(img);
           }
         });
+
+        // Limpa o cronômetro anterior e cria um novo.
+        clearTimeout(resetTimer);
+        resetTimer = setTimeout(() => {
+          currentDelay = 0;
+        }, currentDelay + 100);
+
       }, {
-        // Começa a disparar as requisições 300px antes da carta aparecer na tela
         rootMargin: "0px 0px 300px 0px" 
       });
 
